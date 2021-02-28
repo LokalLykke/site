@@ -6,7 +6,13 @@ organization := "lokallykke.dk"
 
 version := "1.0-SNAPSHOT"
 
-lazy val root = (project in file(".")).enablePlugins(PlayScala)
+lazy val clientProject = RootProject(uri("file:///c:/git/lokallykke-client"))
+
+
+lazy val root = (project in file("."))
+    .enablePlugins(PlayScala)
+    .dependsOn(clientProject)
+    .aggregate(clientProject)
 
 scalaVersion := "2.13.5"
 
