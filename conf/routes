@@ -1,0 +1,4 @@
+GET     /accounting                    controllers.AccountingController.index
+GET     /accounting/ws                 controllers.AccountingController.socket
+
+GET     /assets/*file                  controllers.Assets.at(file)
