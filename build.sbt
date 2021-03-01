@@ -14,9 +14,19 @@ lazy val root = (project in file("."))
     .dependsOn(clientProject)
     .aggregate(clientProject)
 
+
+resourceGenerators in Compile += Def.task {
+  val clientTarget = (fastOptJS in Compile in clientProject).value.data
+  println(s"JS target file: ${clientTarget.getAbsolutePath}")
+  Seq(clientTarget)
+}.taskValue
+
+watchSources ++= (watchSources in clientProject).value
+
 scalaVersion := "2.13.5"
 
 libraryDependencies += guice
 libraryDependencies += "org.webjars" % "bootstrap" % "4.6.0"
 libraryDependencies += "org.webjars" % "jquery" % "3.5.1"
+libraryDependencies += "commons-io" % "commons-io" % "2.8.0"
 

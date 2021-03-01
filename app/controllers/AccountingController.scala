@@ -6,7 +6,9 @@ import play.api.mvc._
 class AccountingController  @Inject() (cc : ControllerComponents) extends AbstractController(cc) {
 
   def index = Action {
-    Ok("Hello")
+    implicit request : Request[AnyContent] => {
+      Ok(views.html.accounting())
+    }
   }
 
 }
