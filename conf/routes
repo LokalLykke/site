@@ -1,4 +1,4 @@
-GET     /accounting                    controllers.AccountingController.index
+GET     /accounting                             controllers.AccountingController.index
 
-GET     /assets/accountingjs          controllers.LokalLykkeAssets.accountingJS
-GET     /assets/*file                  controllers.LokalLykkeAssets.at(file)
+GET     /assets/jslibrary.js                    controllers.LokalLykkeAssets.jsLibrary()
+GET     /assets/*file                           controllers.LokalLykkeAssets.at(file)

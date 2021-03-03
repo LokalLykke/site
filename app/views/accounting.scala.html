@@ -2,10 +2,8 @@
 
 @headerAddOn = {
   <link rel="stylesheet" media="screen" href="@controllers.routes.LokalLykkeAssets.at("css/accounting.css")">
-  <script src="@controllers.routes.LokalLykkeAssets.accountingJS" type="text/javascript"></script>
-
   <script type="text/javascript">
-    var acc = null
+    exports.Accounting.main()
   </script>
 }
 
