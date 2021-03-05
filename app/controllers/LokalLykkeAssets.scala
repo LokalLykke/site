@@ -13,16 +13,8 @@ class LokalLykkeAssets @Inject() (val assets : controllers.Assets, cc : Controll
 
   def at(file : String) : Action[AnyContent] = assets.at(file)
 
-  def jsLibrary = Action {
-    implicit request : Request[AnyContent] => {
-      val bytes = FileUtils.readFileToByteArray(new File("./client/target/scala-2.13", "client-fastopt.js"))
-      Ok(bytes)
-      //Ok(new String(bytes, "UTF-8")).withHeaders(("Content-Type", "text/javascript"))
-    }
-
-  }
-
-  //assets.at("./client/target/scala-2.13", "client-fastopt.js")
+  def jsLibrary = assets.at("/","client-fastopt-bundle.js")
+  def jsLibraryMap = assets.at("/","client-fastopt-bundle.js.map")
 
   def accountingJS : Action[AnyContent] = Action {
     implicit request : Request[AnyContent] => {

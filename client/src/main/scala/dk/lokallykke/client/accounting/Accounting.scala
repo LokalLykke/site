@@ -1,5 +1,6 @@
 package dk.lokallykke.client.accounting
 
+import org.querki.jquery._
 import dk.lokallykke.client.Locations
 import dk.lokallykke.client.util.WSConnector
 import org.scalajs.dom.{Event, WebSocket}
@@ -11,15 +12,20 @@ import scala.scalajs.js.JSON
 import scala.scalajs.js.annotation.{JSExport, _}
 import io.circe._
 import io.circe.parser._
+import org.scalajs.dom
 
 import scala.util.Failure
 
-@JSExportTopLevel("Accounting")
+@JSExportTopLevel("Accounting", "main")
 object Accounting {
 
   @JSExport
   def main(): Unit = {
     println(s"This is some compiled scala.js shiat for ya'll right here")
+    $("a[id^=accouning").each((navLink : dom.Element) =>
+      {
+        println(navLink.innerText)
+      })
   }
 
 
