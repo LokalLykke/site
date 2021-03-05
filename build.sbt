@@ -23,10 +23,12 @@ lazy val root = (project in file("."))
       bundles
       //println(s"JS target file: ${clientTarget.getAbsolutePath}")
       //Seq()
-    }.taskValue
+    }.taskValue/*,
+    unmanagedSources += client.*/
   )
   .enablePlugins(PlayScala)
   .dependsOn(sharedJvm)
+  .dependsOn(client)
 
 
 val circeVersion = "0.13.0"
@@ -62,10 +64,23 @@ lazy val client = (project in file("client"))
 
 
 lazy val shared = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Pure)
+  .crossType(CrossType.Full)
   .in(file("shared"))
   .settings(commonSettings)
+  .settings(
+    name := "Shared"
+  )
+
   .jsConfigure(_.enablePlugins(ScalaJSWeb))
+  .jsSettings(
+    name := "sharedJS"/*,
+    scalaSource := file("shared") / "src" / "main" / "scala"*/
+  )
+  .jvmSettings(
+    name := "sharedJVM"/*,
+    scalaSource := file("shared") / "src" / "main" / "scala"*/
+  )
+
 lazy val sharedJvm = shared.jvm
 lazy val sharedJs = shared.js
 

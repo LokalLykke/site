@@ -7,7 +7,7 @@ import scala.scalajs.js.annotation.{JSExport, _}
 import io.circe._
 import io.circe.parser._
 
-@JSExportTopLevel("Shop", "main")
+@JSExportTopLevel("Shop")
 object Shop {
 
   @JSExport

@@ -7,6 +7,7 @@ import org.scalajs.dom.{Event, WebSocket}
 import org.scalajs.dom.raw._
 import dk.lokallykke.client.Messages.{Accounting => AccMessages}
 import AccMessages.ToClient.Pong
+import dk.lokallykke.client.viewmodel.accounting.{ToClientMessage, ToServerMessage}
 
 import scala.scalajs.js.JSON
 import scala.scalajs.js.annotation.{JSExport, _}
@@ -16,17 +17,16 @@ import org.scalajs.dom
 
 import scala.util.Failure
 
-@JSExportTopLevel("Accounting", "main")
+@JSExportTopLevel("Accounting")
 object Accounting {
 
   @JSExport
   def main(): Unit = {
     println(s"This is some compiled scala.js shiat for ya'll right here")
-    $("a[id^=accouning").each((navLink : dom.Element) =>
-      {
-        println(navLink.innerText)
-      })
+    val ws = AccountingConnector.ws
   }
+
+
 
 
 
@@ -36,16 +36,32 @@ object Accounting {
     import io.circe.generic.auto._
     import io.circe.syntax._
 
-    override def location = Locations.Accounting.WebSocket
+    var count = 0
+
+    def sendPing = {
+      count += 1
+      val mess = ToServerMessage("Ping no. " + count)
+      val toSend = mess.asJson.toString()
+      super.!(toSend)
+
+    }
+
+    override def onOpen: Event => Unit = {
+      case ev => {
+        println(s"Connected to server")
+        sendPing
+      }
+    }
+
 
     override def onMessage: MessageEvent => Unit = (ev : MessageEvent) => {
+      println(s"Received: ${ev.data.toString}")
       parse(ev.data.toString) match {
         case Left(fail) => println(fail.message)
-        case Right(js) => js.as[Pong].foreach {
-          case pong => println(s"Received pong: ${pong.str}")
+        case Right(js) => js.as[ToClientMessage].foreach {
+          case mess => println(s"Received message: ${mess.pong}")
         }
       }
-
     }
 
   }

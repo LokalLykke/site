@@ -1,4 +1,5 @@
 GET     /accounting                             controllers.AccountingController.index
+GET     /accounting/ws                          controllers.AccountingController.socket
 
 GET     /assets/jslibrary.js                    controllers.LokalLykkeAssets.jsLibrary()
 GET     /assets/client-fastopt-bundle.js.map    controllers.LokalLykkeAssets.jsLibraryMap()
