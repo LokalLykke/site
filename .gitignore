@@ -17,3 +17,10 @@ server.pid
 info.txt
 /.idea/
 /conf/production.conf
+/download/
+/model/
+/shared/.js/target/
+/shared/.jvm/target/
+/shared/js/target/
+/shared/jvm/target/
+/client/target/
