@@ -9,5 +9,9 @@ case class Item(
                width : Option[Int],
                height : Option[Int],
                caption : Option[String],
-               timestamp : Timestamp
+               registered : Timestamp,
+               costvalue : Option[Double],
+               soldat : Option[Timestamp],
+               soldfor : Option[Double],
+               deletedAt : Option[Timestamp]
                )

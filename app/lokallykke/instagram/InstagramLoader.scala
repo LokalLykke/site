@@ -7,6 +7,7 @@ import play.api.libs.json.{JsArray, JsObject, Json}
 
 import java.io.File
 import java.sql.Timestamp
+import scala.io.Source
 import scala.sys.process._
 
 object InstagramLoader {
@@ -14,13 +15,6 @@ object InstagramLoader {
   private val OutputDir = new File("download/instaloader")
   private val ResultDir = new File(OutputDir, "lokallykke")
 
-
-
-
-  def main(args: Array[String]): Unit = {
-    parseResponse.foreach(println)
-
-  }
 
 
   def downloadItems = {
@@ -37,9 +31,12 @@ object InstagramLoader {
     val res = cmd.!!
     logger.info(s"Result from InstagramLoader:")
     logger.info(res)
+    val parsed = parseResponse
+    logger.info(s"Downloaded and parsed ${parsed.size} items from Instagram")
+    parsed
   }
 
-  private def parseResponse = {
+  def parseResponse = {
     val read = ResultDir.listFiles().filter(_.getName.contains(""".""")).map {
       case file => {
         val byts = FileUtils.readFileToByteArray(file)
@@ -47,19 +44,24 @@ object InstagramLoader {
         (imageName, fileType, file, byts)
       }
     }
-    read.groupBy(_._1).map {
+    (read.groupBy(_._1).toList.map {
       case (nam, ents) => {
+        val fileCaption = ents.find(_._2 ~ "txt").map {
+          case (_,_,_,bytz) => Source.fromBytes(bytz, "UTF-8").toList.mkString("")
+        }
         (ents.find(_._2 ~ "json"), ents.find(_._2 ~~ Seq("jpg", "png"))) match {
           case (None, _) => None
           case (_,None) => None
           case (Some(jsEnt), Some(imgEnt)) => {
             parseJson(jsEnt._4) match {
               case None => None
-              case Some((id, width, height, caption, timestamp)) => InstagramItem(id, imgEnt._4, width, height, caption, new Timestamp(timestamp * 1000L))
+              case Some((id, width, height, caption, timestamp)) => Some(InstagramItem(id, imgEnt._4, width, height, caption.orElse(fileCaption), new Timestamp(timestamp * 1000L)))
             }
           }
         }
       }
+    }).collect {
+      case Some(it) => it
     }
   }
 
@@ -75,6 +77,7 @@ object InstagramLoader {
           case arr : JsArray => Some(arr.value.map(_ \ "node" \ "text").map(_.as[String]).mkString(""))
           case _ => None
         }
+        println(caption)
         val timestamp = (node \ "taken_at_timestamp").as[Long]
         Some((id, width, height, caption, timestamp))
       }

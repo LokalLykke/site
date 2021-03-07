@@ -15,7 +15,9 @@ lazy val root = (project in file("."))
       "org.webjars" % "bootstrap" % "4.6.0",
       "org.webjars" % "jquery" % "3.5.1",
       "org.webjars" % "requirejs" % "2.3.6",
-      "com.typesafe.slick" %% "slick" % "3.3.2"
+      "com.typesafe.slick" %% "slick" % "3.3.2",
+      "com.zaxxer" % "HikariCP" % "2.4.2",
+      "com.h2database" % "h2" % "1.4.200"
     ),
     resourceGenerators in Compile += Def.task {
       val clientTarget = ( fastLinkJS in Compile in client).value.data

@@ -2,9 +2,6 @@ package lokallykke.db
 
 import lokallykke.model.items.Item
 import org.slf4j.LoggerFactory
-import slick.lifted.Tag
-import slick.model.Table
-import slick.jdbc
 import slick.jdbc.JdbcProfile
 
 import java.sql.Timestamp
@@ -37,8 +34,15 @@ trait Tables {
       def width = column[Option[Int]]("WIDTH")
       def height = column[Option[Int]]("HEIGHT")
       def caption = column[Option[String]]("CAPTION")
-      def timestamp = column[Timestamp]("TIMESTAMP")
-      def * = (id, instagramId, bytes, width, height, caption, timestamp).<> (Item.tupled, Item.unapply)
+      def registered = column[Timestamp]("REGISTERED")
+      def costvalue = column[Option[Double]]("COSTVALUE")
+      def soldat = column[Option[Timestamp]]("SOLDAT")
+      def soldvalue = column[Option[Double]]("SOLDVALUE")
+      def deletedAt = column[Option[Timestamp]]("DELETEDAT")
+      def * = (id, instagramId, bytes, width, height, caption, registered, costvalue, soldat, soldvalue, deletedAt).<> (Item.tupled, Item.unapply)
+
+      def indxInsta = index("IDX_ITEM_INSID", (instagramId), false)
+
 
 
     }
