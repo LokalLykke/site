@@ -50,6 +50,10 @@ trait ItemHandler {
     Await.result(db.run(items.filter(_.instagramId === instaId).result), dt).headOption
   }
 
+  def loadItemImage(itemId : Long) : Option[Array[Byte]] = {
+    Await.result(db.run(items.filter(_.id === itemId).map(_.bytes).result), dt).headOption
+  }
+
 
 
 }

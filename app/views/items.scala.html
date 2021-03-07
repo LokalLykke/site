@@ -1,0 +1,36 @@
+@()
+
+@headerAddOn = {
+  <link rel="stylesheet" media="screen" href="@controllers.routes.LokalLykkeAssets.at("css/accounting.css")">
+
+  <script type="module">
+    //import {client-fastopt} from '@controllers.routes.LokalLykkeAssets.jsLibrary'
+    let acc = Accounting
+    acc.main()
+    console.log('Yo ho hello')
+
+  </script>
+}
+
+@main("Items", headerAddOn, "items") {
+  <main role="main" class="">
+    <div class="container-fluid flex-fill">
+      <div class="row">
+        <div class="col-2 bg-light side-bar flex-fill" style="background-color: #e3f2fd;">
+          <div class="sidebar-sticky flex-column flex-fill" style="height=100vh;">
+            <h6 class="sidebar-heading d-flex text-muted mt-4">
+              <span>I beholdning</span>
+            </h6>
+            <a class="nav-link" href="#" id="items-nav-on-stock">På lager</a>
+            <a class="nav-link" href="#" id="items-nav-sold">Solgt</a>
+            <a class="nav-link" href="#" id="items-nav-all">Alle</a>
+          </div>
+        </div>
+        <div class="col-10">
+          <div id="items-content-insert"></div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+}

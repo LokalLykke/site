@@ -1,3 +1,6 @@
+
+GET     /items/itemimage                        controllers.LokalLykkeAssets.itemImage(itemId : Long)
+
 GET     /accounting                             controllers.AccountingController.index
 GET     /accounting/ws                          controllers.AccountingController.socket
 
