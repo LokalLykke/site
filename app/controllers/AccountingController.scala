@@ -3,7 +3,7 @@ package controllers
 import akka.actor.{Actor, ActorRef, ActorSystem}
 import akka.stream.Materializer
 import dk.lokallykke.client.viewmodel.accounting.{ToClientMessage, ToServerMessage}
-import dk.lokallykke.client.viewmodel.holding.ViewHoldingItem
+import lokallykke.scheduled.Pingable
 import play.api.libs.json.Json
 
 import javax.inject.Inject
@@ -13,7 +13,6 @@ class AccountingController  @Inject() (cc : ControllerComponents)(implicit inSys
 
   def index = actionFrom {
     case request : Request[AnyContent] => {
-      val toSend = ViewHoldingItem(1L, "Test item", Some("More stuff"), None)
       Ok(views.html.accounting())
     }
 
@@ -28,7 +27,7 @@ class AccountingController  @Inject() (cc : ControllerComponents)(implicit inSys
   def socket = wsFrom((out : ActorRef) => new AccountingWSActor(out))
 
 
-  class AccountingWSActor(out : ActorRef) extends Actor {
+  class AccountingWSActor(out : ActorRef) extends Actor with Pingable {
     implicit val messReads = Json.reads[ToServerMessage]
     implicit val messWrites = Json.writes[ToClientMessage]
 
@@ -54,6 +53,7 @@ class AccountingController  @Inject() (cc : ControllerComponents)(implicit inSys
       }
     }
 
+    override def pingOut: ActorRef = out
   }
 
 }

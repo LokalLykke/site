@@ -10,6 +10,7 @@ trait WSConnector {
   import io.circe.generic.auto._
   import io.circe.syntax._
 
+
   private var ws : Option[WebSocket] = None
 
   def onOpen : Event => Unit = (ev : Event) =>  {
@@ -41,7 +42,7 @@ trait WSConnector {
         }
         case Right(js) => {
           js.as[Messages.Common.ToClient.Ping.type].toOption match {
-            case Some(ping) =>
+            case Some(ping) => println("Done got pinged")
             case None => onJson.map(_(js)).getOrElse(onMessage(mess))
           }
         }

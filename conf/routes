@@ -1,8 +1,10 @@
 
 GET     /items/itemimage                        controllers.LokalLykkeAssets.itemImage(itemId : Long)
+GET     /items/ws                               controllers.ItemsController.socket
+GET     /items                                  controllers.ItemsController.index()
 
-GET     /accounting                             controllers.AccountingController.index
 GET     /accounting/ws                          controllers.AccountingController.socket
+GET     /accounting                             controllers.AccountingController.index
 
 GET     /assets/jslibrary.js                    controllers.LokalLykkeAssets.jsLibrary()
 GET     /assets/client-fastopt-bundle.js.map    controllers.LokalLykkeAssets.jsLibraryMap()

@@ -44,7 +44,10 @@ lazy val client = (project in file("client"))
       "io.circe" %%% "circe-core" % circeVersion,
       "io.circe" %%% "circe-generic" % circeVersion,
       "io.circe" %%% "circe-parser" % circeVersion,
-      "org.querki" %%% "jquery-facade" % "2.0"
+      "io.circe" %% "circe-generic-extras" % circeVersion,
+      "org.querki" %%% "jquery-facade" % "2.0",
+      "io.github.cquiroz" %%% "locales-minimal-en-db" % "1.1.1",
+      "io.github.cquiroz" %%% "scala-java-time" % "2.2.0"
     ),
     npmDependencies in Compile ++= Seq("jquery" -> "3.6.0", "bootstrap" -> "4.6.0"),
     sourceGenerators in Compile += Def.task {

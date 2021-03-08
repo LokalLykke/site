@@ -1,12 +1,14 @@
 package dk.lokallykke.client.util
 
-import java.sql.{Date, Timestamp}
+import dk.lokallykke.client.util.JsExtensions.DateExtensions
+
 import java.text.{DecimalFormat, NumberFormat}
-import java.time.format.DateTimeFormatter
-import java.util.Locale
+import java.util.{Locale, TimeZone}
+import java.time._
+import java.time.format._
+import scala.scalajs.js.Date
 
 object JsExtensions {
-
 
   implicit class DoubleExtensions(d : Double) {
     import DoubleExtensions._
@@ -15,17 +17,22 @@ object JsExtensions {
 
   implicit class DateExtensions(d : Date) {
     import DateExtensions._
-    def toDateString = DateExtensions.dkFormat.format(d.toLocalDate)
+    def toDateString ={
+      val localDateTime = Instant.ofEpochMilli(d.getTime.toLong)
+      dateFormatter.format(LocalDateTime.ofInstant(localDateTime, ZoneOffset.ofHours(1)))
+    }
   }
+
+  implicit class DateTimeExtensions(d : LocalDateTime) {
+    import DateTimeExtensions._
+
+    def toDateTimeString = d.format(dateTimeFormatter)
+  }
+
 
   implicit class LongExtensions(l : Long) {
     def toDate = new Date(l)
-    def toTimestamp = new Timestamp(l)
-  }
-
-  implicit class TimestampExtensions(ts : Timestamp) {
-    import TimestampExtensions._
-    def toTimestampString = dkFormat.format(ts.toLocalDateTime)
+    def toDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(l), ZoneOffset.ofHours(1))
   }
 
 
@@ -37,12 +44,14 @@ object JsExtensions {
   }
 
   object DateExtensions {
-    val dkFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy")
+    val dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")
   }
 
-  object TimestampExtensions {
-    val dkFormat = DateTimeFormatter.ofPattern("dd-MM-yyyy HH24:MI:SS")
+  object DateTimeExtensions {
+    val dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")
   }
+
+
 
 
 }

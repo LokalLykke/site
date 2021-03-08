@@ -1,14 +1,19 @@
-@()
+@(items : Seq[_root_.dk.lokallykke.client.viewmodel.items.ViewItem])
+
+@import _root_.dk.lokallykke.client.items.Items
+@import _root_.dk.lokallykke.client.viewmodel.items.ViewItem
+@import _root_.play.api.libs.json.Json
 
 @headerAddOn = {
-  <link rel="stylesheet" media="screen" href="@controllers.routes.LokalLykkeAssets.at("css/accounting.css")">
+  <link rel="stylesheet" media="screen" href="@controllers.routes.LokalLykkeAssets.at("css/items.css")">
 
   <script type="module">
-    //import {client-fastopt} from '@controllers.routes.LokalLykkeAssets.jsLibrary'
-    let acc = Accounting
-    acc.main()
-    console.log('Yo ho hello')
-
+    Items.main()
+    let items = @{
+      implicit val writes = Json.writes[ViewItem]
+      Html(Json.stringify(Json.toJson(items)))
+    }
+    Items.updateTable(JSON.stringify(items))
   </script>
 }
 
@@ -27,7 +32,11 @@
           </div>
         </div>
         <div class="col-10">
-          <div id="items-content-insert"></div>
+          <div id="items-content-insert">
+            <div id="items-table-insert">
+
+            </div>
+          </div>
         </div>
       </div>
     </div>
