@@ -6,6 +6,6 @@ case class ViewItem(
                      itemId : Long,
                      instaId : Option[Long],
                      caption : Option[String],
-                     registered : Timestamp,
+                     registered : Long,
                      costValue : Option[Double]
                    )

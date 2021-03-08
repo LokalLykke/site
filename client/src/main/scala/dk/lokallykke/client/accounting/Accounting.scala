@@ -23,7 +23,7 @@ object Accounting {
   @JSExport
   def main(): Unit = {
     println(s"This is some compiled scala.js shiat for ya'll right here")
-    val ws = AccountingConnector.ws
+    AccountingConnector.connectToServer
   }
 
 
@@ -36,20 +36,10 @@ object Accounting {
     import io.circe.generic.auto._
     import io.circe.syntax._
 
-    var count = 0
-
-    def sendPing = {
-      count += 1
-      val mess = ToServerMessage("Ping no. " + count)
-      val toSend = mess.asJson.toString()
-      super.!(toSend)
-
-    }
 
     override def onOpen: Event => Unit = {
       case ev => {
         println(s"Connected to server")
-        sendPing
       }
     }
 
