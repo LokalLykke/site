@@ -13,11 +13,10 @@ trait Scheduled {
 }
 
 object Scheduled {
-  def apply(name : String, initialDelay : FiniteDuration, delay : FiniteDuration, proc : () => Unit) = new Scheduled {
-    override def name: String = name
-    override def initialDelay: FiniteDuration = initialDelay
-    override def delay: FiniteDuration = delay
-
-    override def execute: () => Unit = proc
+  def apply(inName : String, inInitialDelay : FiniteDuration, inDelay : FiniteDuration, inProc : () => Unit) = new Scheduled {
+    override def name: String = inName
+    override def initialDelay: FiniteDuration = inInitialDelay
+    override def delay: FiniteDuration = inDelay
+    override def execute: () => Unit = inProc
   }
 }

@@ -17,13 +17,10 @@ class Scheduler extends SimpleModule(bind[SchedulerStarter].toSelf.eagerly()) {
 
 object Scheduler {
   def schedules : List[Scheduled] = List(
-     //Scheduled("Ping clients", 10.seconds, 20.seconds, () => Pingable.ping)
+     Scheduled("Ping clients",  10.seconds , 20.seconds, () => Pingable.ping)
   )
 
-  schedules.foreach(s => println(s.name))
-
   protected[scheduled] def init(actorSystem: ActorSystem) = {
-    /*println("init'ing")
     schedules.foreach {
       case sched => {
         implicit val context = actorSystem.dispatcher.asInstanceOf[ExecutionContext]
@@ -32,9 +29,9 @@ object Scheduler {
             sched.execute()
           }
         }
-        //actorSystem.scheduler.scheduleAtFixedRate(sched.initialDelay, sched.delay)(runnable)
+        actorSystem.scheduler.scheduleAtFixedRate(sched.initialDelay, sched.delay)(runnable)
       }
-    }*/
+    }
 
   }
 

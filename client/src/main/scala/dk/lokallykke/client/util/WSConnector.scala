@@ -42,7 +42,7 @@ trait WSConnector {
         }
         case Right(js) => {
           js.as[Messages.Common.ToClient.Ping.type].toOption match {
-            case Some(ping) => println("Done got pinged")
+            case Some(ping) => println("Ping")
             case None => onJson.map(_(js)).getOrElse(onMessage(mess))
           }
         }

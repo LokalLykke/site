@@ -17,13 +17,10 @@ trait Pingable {
   }
 
   def ping = {
-    println(s"Pinging")
     pingOut ! Json.toJson(Pingable.pingMessage)
   }
 
-  println(s"Will register")
   registerPingable(this)
-  println(s"Registered")
 }
 
 object Pingable {
