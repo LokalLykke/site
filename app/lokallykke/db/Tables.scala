@@ -39,7 +39,8 @@ trait Tables {
       def soldat = column[Option[Timestamp]]("SOLDAT")
       def soldvalue = column[Option[Double]]("SOLDVALUE")
       def deletedAt = column[Option[Timestamp]]("DELETEDAT")
-      def * = (id, instagramId, bytes, width, height, caption, registered, costvalue, soldat, soldvalue, deletedAt).<> (Item.tupled, Item.unapply)
+      def askprice = column[Option[Double]]("ASKPRICE")
+      def * = (id, instagramId, bytes, width, height, caption, registered, costvalue, soldat, soldvalue, deletedAt, askprice).<> (Item.tupled, Item.unapply)
 
       def indxInsta = index("IDX_ITEM_INSID", (instagramId), false)
 

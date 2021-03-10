@@ -16,7 +16,7 @@ object ExploreItemHandling {
 
     val converted = instaItems map {
       case it => Item(-1L, Some(it.id), it.bytes, Some(it.width), Some(it.height), it.caption, new Timestamp(System.currentTimeMillis()),
-        None, None, None,None)
+        None, None, None,None, None)
     }
 
     for (

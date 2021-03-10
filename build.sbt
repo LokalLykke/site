@@ -30,7 +30,6 @@ lazy val root = (project in file("."))
     unmanagedSources += client.*/
   )
   .enablePlugins(PlayScala)
-  .dependsOn(sharedJvm)
   .dependsOn(client)
 
 
@@ -55,40 +54,9 @@ lazy val client = (project in file("client"))
       Seq.empty[File]
     },
     webpackBundlingMode := BundlingMode.LibraryAndApplication(),
-    /*scalaJSUseMainModuleInitializer in Compile := true,
-    mainClass := Some("dk.lokallykke.client.Main"),*/
-    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule)}/*,
-    scalaJSStage in Global := FullOptStage,
-    scalaJSModuleInitializers in Compile ++= Seq(
-      ModuleInitializer.mainMethod("dk.lokallykke.client.accounting.Accounting", "main").withModuleID("accounting"),
-      ModuleInitializer.mainMethod("dk.lokallykke.client.shop.Shop", "main").withModuleID("shop")
-    )*/
+    scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule)}
   )
   .enablePlugins(ScalaJSPlugin, ScalaJSWeb, ScalaJSBundlerPlugin)
-  .dependsOn(sharedJs)
-
-
-
-lazy val shared = crossProject(JSPlatform, JVMPlatform)
-  .crossType(CrossType.Full)
-  .in(file("shared"))
-  .settings(commonSettings)
-  .settings(
-    name := "Shared"
-  )
-
-  .jsConfigure(_.enablePlugins(ScalaJSWeb))
-  .jsSettings(
-    name := "sharedJS"/*,
-    scalaSource := file("shared") / "src" / "main" / "scala"*/
-  )
-  .jvmSettings(
-    name := "sharedJVM"/*,
-    scalaSource := file("shared") / "src" / "main" / "scala"*/
-  )
-
-lazy val sharedJvm = shared.jvm
-lazy val sharedJs = shared.js
 
 
 lazy val commonSettings = Seq(

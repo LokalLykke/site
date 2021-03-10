@@ -49,7 +49,7 @@ object ItemsController {
 
   def loadItems(handler : ItemHandler, includeSold : Boolean) = {
     handler.loadItems(includeSold).map {
-      case it => ViewItem(it.id, it.instagramId, it.caption, it.registered.getTime, it.costvalue)
+      case it => ViewItem(it.id, it.instagramId, it.caption, it.registered.getTime, it.costvalue, it.askprice)
     }
   }
 

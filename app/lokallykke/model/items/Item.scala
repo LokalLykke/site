@@ -13,5 +13,6 @@ case class Item(
                costvalue : Option[Double],
                soldat : Option[Timestamp],
                soldfor : Option[Double],
-               deletedAt : Option[Timestamp]
+               deletedAt : Option[Timestamp],
+               askprice : Option[Double]
                )

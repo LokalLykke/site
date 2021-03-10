@@ -7,5 +7,6 @@ case class ViewItem(
                      instaId : Option[Long],
                      caption : Option[String],
                      registered : Long,
-                     costValue : Option[Double]
+                     costValue : Option[Double],
+                     askPrice : Option[Double]
                    )
