@@ -10,6 +10,8 @@ import io.circe.generic.semiauto.deriveDecoder
 import io.circe.{Decoder, Json, JsonObject}
 import org.scalajs.dom.MessageEvent
 
+import java.time.LocalDateTime
+import scala.scalajs.js.Date
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel, JSImport}
 @JSExportTopLevel("Items")
 object Items {
@@ -31,7 +33,11 @@ object Items {
         import org.scalajs.dom
         val modalContents = List(
           Modal.Image("item-image",Locations.Items.itemImage(item.itemId)),
-          Modal.DisplayParagraph("item-description", "This is just a sample text to ensure that everything works as expected.")
+          Modal.DisplayParagraph("item-description", "This is just a sample text to ensure that everything works as expected."),
+          //Modal.EditableDateTime("item-registered", "Registreret", Some(LocalDateTime.now())),
+          //Modal.EditableDate("item-date", "En dato eller sådan", Some(new Date(Date.now))),
+          Modal.EditableDouble("item-costval", "Købsværdi", Some(100.23)),
+          Modal.EditableString("item-caption", "Beskrivelse", Some("Holy hep"))
         )
         val changedValues = Modal("item-modal", "Redigér genstand", modalContents)
       }))

@@ -1,6 +1,6 @@
 package dk.lokallykke.client.util
 
-import org.querki.jquery.{$, JQuery, JQueryStatic}
+import org.querki.jquery.{$, JQuery, JQueryEventObject, JQueryStatic}
 
 import java.time.LocalDateTime
 import scala.scalajs.js
@@ -31,10 +31,16 @@ object Modal {
   implicit def jq2bootstrap(jq: JQuery): BootstrapJQuery = jq.asInstanceOf[BootstrapJQuery]
 
 
-  def apply(id : String, title : String, fields : Seq[ModalField]) : Map[String, Any] = {
+  def apply(id : String, title : String, fields : Seq[ModalField]) : Map[String, () => Option[Any]] = {
     val body = $("<div class='modal-body'>")
+    val resolvers = scala.collection.mutable.ArrayBuffer.empty[(String, () => Option[Any])]
     val contents = fields.map(bodyContentFromField)
-    contents.foreach(c => $(body).append(c))
+    contents.foreach{
+      case (cont, valRes) => {
+        $(body).append(cont)
+        valRes.foreach(vr => resolvers += vr)
+      }
+    }
 
 
     val modal = $(s"<div class='modal fade' id='$id' role='dialog' aria-labelledby='$id-center-title' aria-hidden='true'>").append(
@@ -51,17 +57,71 @@ object Modal {
       )
     )
     displayModal(modal)
-    Map.empty
+    resolvers.toMap
   }
 
-  def bodyContentFromField(field : ModalField) = {
+  def bodyContentFromField(field : ModalField) : (JQuery, Option[(String, () => Option[Any])]) = {
+    import JsExtensions._
+    val ret = field match {
+      case DisplayParagraph(id,text) => ($(s"<p id='$id'>").html(text), None.asInstanceOf[Option[(String,() => Option[Any])]])
+      case Image(id, url) => ($(s"<img src='$url' class='img-fluid'>"),None.asInstanceOf[Option[(String, () => Option[Any])]])
+      case EditableDateTime(id, key, value) => {
+        val input = $("<div class='my-2'>").append(
+          $(s"<label for='$id' class='form-label'>").text(key),
+          $(s"<input id='$id' type='datetime-local' class='form-control' value='${value.map(_.toInputDateString).getOrElse("")}'>")
+        )
+        var retVal : Option[LocalDateTime] = None
+        $(input).change((ev : JQueryEventObject) => {
+          val newVal = $(input).value()
+          println(s"New datetime value: ${newVal} of type : ${newVal.getClass}")
+        })
+        val valRes = Some((id, () => retVal))
+        (input, valRes)
+      }
+      case EditableDate(id, key, value) => {
+        val input = $("<div class='my-2'>").append(
+          $(s"<label for='$id' class='form-label'>").text(key),
+          $(s"<input id='$id' type='date' class='form-control' value='${value.map(_.toInputDateString).getOrElse("")}'>")
+        )
+        var retVal : Option[Date] = None
+        $(input).change((ev : JQueryEventObject) => {
+          val newVal = $(input).value()
+          println(s"New date value: ${newVal} of type : ${newVal.getClass}")
+        })
+        val valRes = Some((id, () => retVal))
+        (input, valRes)
 
-    val content = field match {
-      case DisplayParagraph(id,text) => $(s"<p id='$id'>").html(text)
-      case Image(id, url) => $(s"<img src='$url' class='img-fluid'>")
-      case _ => $("")
+      }
+      case EditableDouble(id, key, value) => {
+        val input = $("<div class='my-2'>").append(
+          $(s"<label for='$id' class='form-label'>").text(key),
+          $(s"<input id='$id' type='date' class='form-control' value='${value.map(_.toInputString).getOrElse("")}'>")
+        )
+        var retVal : Option[Double] = None
+        $(input).change((ev : JQueryEventObject) => {
+          val newVal = $(input).value()
+          println(s"New double value: ${newVal} of type : ${newVal.getClass}")
+        })
+        val valRes = Some((id, () => retVal))
+        (input, valRes)
+      }
+      case EditableString(id, key, value) => {
+        val input = $("<div class='my-2'>").append(
+          $(s"<label for='$id' class='form-label'>").text(key),
+          $(s"<input id='$id' type='text' class='form-control' value='${value.getOrElse("")}'>")
+        )
+        var retVal : Option[String] = None
+        $(input).change((ev : JQueryEventObject) => {
+          val newVal = $(input).value()
+          println(s"New string value: ${newVal} of type : ${newVal.getClass}")
+        })
+        val valRes = Some((id, () => retVal))
+        (input, valRes)
+      }
+
+      case _ => ($(""),None.asInstanceOf[Option[(String, () => Option[Any])]])
     }
-    content
+    ret
   }
 
   def displayModal(modal : JQuery)  = {
