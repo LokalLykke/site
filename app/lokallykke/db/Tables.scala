@@ -30,6 +30,7 @@ trait Tables {
     class ItemTable(tag : Tag) extends Table[Item](tag, "ITEMS") {
       def id = column[Long]("ITEMID", O.PrimaryKey, O.AutoInc)
       def instagramId = column[Option[Long]]("INSTAID")
+      def name = column[Option[String]]("ITEMNAME")
       def bytes = column[Array[Byte]]("FILEBYTES")
       def width = column[Option[Int]]("WIDTH")
       def height = column[Option[Int]]("HEIGHT")
@@ -40,7 +41,7 @@ trait Tables {
       def soldvalue = column[Option[Double]]("SOLDVALUE")
       def deletedAt = column[Option[Timestamp]]("DELETEDAT")
       def askprice = column[Option[Double]]("ASKPRICE")
-      def * = (id, instagramId, bytes, width, height, caption, registered, costvalue, soldat, soldvalue, deletedAt, askprice).<> (Item.tupled, Item.unapply)
+      def * = (id, instagramId, name, bytes, width, height, caption, registered, costvalue, soldat, soldvalue, deletedAt, askprice).<> (Item.tupled, Item.unapply)
 
       def indxInsta = index("IDX_ITEM_INSID", (instagramId), false)
 

@@ -4,9 +4,9 @@ import com.typesafe.config.ConfigFactory
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 
 object LocallykkeConfig {
-  lazy val config = ConfigFactory.load("production.conf").withFallback(
+  lazy val config = ConfigFactory.load("application.conf") /*ConfigFactory.load("production.conf").withFallback(
     ConfigFactory.load("application.conf")
-  )
+  )*/
 
   object Db {
     private lazy val dbConfig = config.getConfig("db")

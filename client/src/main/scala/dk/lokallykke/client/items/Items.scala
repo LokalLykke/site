@@ -13,6 +13,8 @@ import org.scalajs.dom.MessageEvent
 import java.time.LocalDateTime
 import scala.scalajs.js.Date
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel, JSImport}
+
+
 @JSExportTopLevel("Items")
 object Items {
   val ItemsTableInsert = "#items-table-insert"
@@ -21,11 +23,12 @@ object Items {
     import Column._
     object ItemTable {
       val imageCol = ImageColumn[ViewItem]("image", "Billede", None, en => Some(Locations.Items.itemImage(en.itemId)))
+      val nameCol = StringColumn[ViewItem]("name", "Navn",_.name)
       val captionCol = StringColumn[ViewItem]("caption", "Beskrivelse",_.caption)
       val registeredCol = DateTimeColumn[ViewItem]("registered", "Registreret", en => Some(en.registered.toDateTime))
       val costValueCol = DoubleColumn[ViewItem]("costvalue", "Købsværdi", en => en.costValue )
       val askPriceCol = DoubleColumn[ViewItem]("askprice", "Til salg for", en => en.askPrice )
-      val columns = Seq(imageCol, captionCol, registeredCol, costValueCol, askPriceCol)
+      val columns = Seq(imageCol, nameCol, captionCol, registeredCol, costValueCol, askPriceCol)
 
       def rowHandlerFor(item : ViewItem) : Option[EventHandler] =  Some(((obj : JQueryEventObject) => {
         import dk.lokallykke.client.util.Modal
@@ -34,14 +37,23 @@ object Items {
 
         val modalContents = List(
           Modal.Image("item-image",Locations.Items.itemImage(item.itemId)),
-          Modal.DisplayParagraph("item-description", "This is just a sample text to ensure that everything works as expected."),
-          Modal.EditableDateTime("item-registered", "Registreret", Some(item.registered.toDateTime)),
-          Modal.EditableDate("item-date", "En dato eller sådan", Some(item.registered.toDate)),
-          Modal.EditableDouble("item-costval", "Købsværdi", Some(100000.23)),
-          Modal.EditableString("item-caption", "Beskrivelse", Some("Holy hep"))
+          Modal.EditableString("item-name", "Navn", item.name),
+          Modal.EditableString("item-caption", "Beskrivelse", item.caption),
+          Modal.EditableDouble("item-costval", "Købsværdi", item.costValue),
+          Modal.EditableDouble("item-askprice", "Til salg for", item.askPrice)
         )
         Modal("item-modal", "Redigér genstand", modalContents, Some((ret) => {
-          ret.foreach(p => println(s"Returned: ${p._1} = ${p._2}"))
+          var updated = item
+          ret.map(p => p._1 -> p._2()).foreach {
+            case ("item-name", n : Option[String]) => updated = updated.copy(name = n)
+            case ("item-caption", n : Option[String]) => updated = updated.copy(caption = n)
+            case ("item-costval", d : Option[Double]) => updated = updated.copy(costValue = d)
+            case ("item-askprice", d : Option[Double]) => updated = updated.copy(askPrice = d)
+            case (itId,v) => {
+              println(s"Found no way to update field: ${itId} with value: $v")
+            }
+          }
+          ItemsConnector.sendViewItemUpdate(updated)
         }))
       }))
 
@@ -66,47 +78,13 @@ object Items {
         val items = js.asArray.get.map{i =>
           decode[ViewItem](i.toString).toOption.get
         }
-        val table = Tables.ItemTable.tableBuilder.buildTable(items)
-        $(ItemsTableInsert).empty()
-        $(ItemsTableInsert).append(table)
-        //updateItemTable(items)
+        updateTable(items)
       }
     }
   }
 
-  @JSExport
-  def updateItemTable(items : Seq[ViewItem]) = {
-    val bodyItems = items.map {
-      case it => {
-        val tr = $("<tr scope='row'>")
-        val image = $("<td>").append($("<div>").append(
-          $(s"<img src='${Locations.Items.itemImage(it.itemId)}' height='50' width='50' class='item-image'>"),
-          $("<a href='#'>")
-        ))
-        val caption = $("<td>")text(it.caption.getOrElse(""))
-        val registered = $("<td>").text(it.registered.toDateTime.toDateTimeString)
-        val costvalue = $("<td>").text(it.costValue.map(v => v.toPrettyString).getOrElse(""))
-        $(tr).append(image, caption, registered, costvalue)
-        tr
-      }
-    }
-    val body = $("<tbody>")
-    bodyItems.foreach(it => $(body).append(it))
-
-
-    val table =
-      $("<table id='items-table' class='table table-hover'>").append(
-        $("<thead>").append(
-          $("<tr>").append(
-            $("<th scope='col'>").text("Billede"),
-            $("<th scope='col'>").text("Beskrivelse"),
-            $("<th scope='col'>").text("Registreret"),
-            $("<th scope='col'>").text("Købsværdi")
-          )
-        ),
-        body
-      )
-
+  def updateTable(items : Seq[ViewItem]) : Unit = {
+    val table = Tables.ItemTable.tableBuilder.buildTable(items)
     $(ItemsTableInsert).empty()
     $(ItemsTableInsert).append(table)
   }
@@ -117,10 +95,20 @@ object Items {
     import io.circe.parser._
     import dk.lokallykke.client.Messages.Items._
 
+    def sendViewItemUpdate(item : ViewItem) : Unit = {
+      val mess = ToServer.ToServerMessage(ToServer.UpdateItem, Some(item))
+      val asJson : Json = mess.asJson
+      super.!(asJson.toString())
+    }
+
     override def onJson = Some((js : Json) => {
-      js.as[ToClient.RefreshItems].foreach {
-        case refr => {
-          updateItemTable(refr.items)
+      js.as[ToClient.ToClientMessage].foreach {
+        case mess => {
+          mess.items.foreach {
+            case its => {
+              updateTable(its)
+            }
+          }
         }
       }
     })

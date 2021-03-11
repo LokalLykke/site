@@ -84,11 +84,10 @@ object Modal {
           $(s"<label for='$id' class='form-label'>").text(key),
           $(s"<input id='$id' type='datetime-local' class='form-control' value='${value.map(_.toInputDateString).getOrElse("")}'>")
         )
-        var retVal : Option[LocalDateTime] = None
+        var retVal : Option[LocalDateTime] = value
         $(input).change((ev : JQueryEventObject) => {
           val newVal = $(s"#$id").value()
           retVal = if(newVal != null) newVal.toString.toDateTimeFromInput else None
-          println(s"New datetime value: ${retVal} of type : ${newVal.getClass}")
         })
         val valRes = Some((id, () => retVal))
         (input, valRes)
@@ -98,11 +97,10 @@ object Modal {
           $(s"<label for='$id' class='form-label'>").text(key),
           $(s"<input id='$id' type='date' class='form-control' value='${value.map(_.toInputDateString).getOrElse("")}'>")
         )
-        var retVal : Option[Date] = None
+        var retVal : Option[Date] = value
         $(input).change((ev : JQueryEventObject) => {
           val newVal = $(s"#$id").value()
           retVal = if(newVal != null) newVal.toString.toDateFromInput else None
-          println(s"New date value: ${retVal} of type : ${newVal.getClass}")
         })
         val valRes = Some((id, () => retVal))
         (input, valRes)
@@ -114,11 +112,10 @@ object Modal {
           $(s"<input id='$id' type='number' class='form-control' lang='da-DK' step='0.01' value='${value.map(_.toInputString).getOrElse("")}'>")
         )
 
-        var retVal : Option[Double] = None
+        var retVal : Option[Double] = value
         $(input).change((ev : JQueryEventObject) => {
           val newVal = $(s"#$id").value()
           retVal = if(newVal != null && newVal.toString.size > 0) newVal.toString.toDoubleFromInput else None
-          println(s"New double value: ${retVal} of type : ${newVal.getClass}")
         })
         val valRes = Some((id, () => retVal))
         (input, valRes)
@@ -128,14 +125,12 @@ object Modal {
           $(s"<label for='$id' class='form-label'>").text(key),
           $(s"<input id='$id' type='text' class='form-control' value='${value.getOrElse("")}'>")
         )
-        var retVal : Option[String] = None
+        var retVal : Option[String] = value
         $(input).change((ev : JQueryEventObject) => {
           val newVal = $(s"#$id").value()
           if(newVal != null && newVal.toString.length > 0)
             retVal = Some(newVal.toString)
           else retVal = None
-
-          println(s"New string value: ${retVal} of type : ${newVal.getClass}")
         })
         val valRes = Some((id, () => retVal))
         (input, valRes)

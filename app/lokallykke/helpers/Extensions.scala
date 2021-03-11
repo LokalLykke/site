@@ -1,5 +1,10 @@
 package lokallykke.helpers
 
+import lokallykke.helpers.Extensions.DoubleExtensions.formatPretty
+
+import java.text.{DecimalFormat, NumberFormat}
+import java.util.Locale
+
 object Extensions {
 
   implicit class StringExtensions(str : String) {
@@ -24,5 +29,20 @@ object Extensions {
     }
 
   }
+
+  implicit class DoubleExtensions(d : Double) {
+    def toPrettyString = formatPretty.format(d)
+
+  }
+
+
+  object DoubleExtensions {
+    val numberLocale = Locale.forLanguageTag("da-DK")
+    val formatPretty = NumberFormat.getInstance(numberLocale).asInstanceOf[DecimalFormat]
+    formatPretty.applyPattern("###,##0.00")
+    formatPretty.getDecimalFormatSymbols.setDecimalSeparator(',')
+    formatPretty.getDecimalFormatSymbols.setGroupingSeparator('.')
+  }
+
 
 }

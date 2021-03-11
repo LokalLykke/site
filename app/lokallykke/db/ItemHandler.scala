@@ -7,6 +7,7 @@ import slick.jdbc.JdbcProfile
 
 import scala.concurrent.Await
 import scala.concurrent.duration._
+import lokallykke.helpers.Extensions._
 
 trait ItemHandler {
   private val logger = LoggerFactory.getLogger(this.getClass)
@@ -37,9 +38,9 @@ trait ItemHandler {
     logger.info(s"Updated image for item with ID: ${itemId}")
   }
 
-  def changeCaption(itemId : Long, caption : Option[String]) = {
-    Await.result(db.run(items.filter(_.id ===itemId).map(_.caption).update(caption)), dt)
-    logger.info(s"Changed caption for item with ID: ${itemId} to: ${caption.getOrElse("")}")
+  def updateItem(itemId : Long, name : Option[String], caption : Option[String], costValue : Option[Double], askPrice : Option[Double]) = {
+    Await.result(db.run(items.filter(_.id === itemId).map(en => (en.name, en.caption, en.costvalue, en.askprice)).update((name, caption, costValue, askPrice))), dt)
+    logger.info(s"Updated item with ID: ${itemId} name: ${name.getOrElse("")}  caption: ${caption.getOrElse("")} costvalue : ${costValue.map(_.toPrettyString).getOrElse("")}")
   }
 
   def loadItems(includeSold : Boolean = false) : Seq[Item] = {

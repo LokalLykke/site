@@ -5,6 +5,7 @@ import java.sql.Timestamp
 case class Item(
                id : Long,
                instagramId : Option[Long],
+               name : Option[String],
                bytes : Array[Byte],
                width : Option[Int],
                height : Option[Int],
