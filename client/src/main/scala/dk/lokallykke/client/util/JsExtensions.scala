@@ -6,7 +6,9 @@ import java.text.{DecimalFormat, NumberFormat}
 import java.util.{Locale, TimeZone}
 import java.time._
 import java.time.format._
+import java.time.temporal.{ChronoField, TemporalField}
 import scala.scalajs.js.Date
+import scala.util.Try
 
 object JsExtensions {
 
@@ -42,15 +44,40 @@ object JsExtensions {
     def toDateTime = LocalDateTime.ofInstant(Instant.ofEpochMilli(l), ZoneOffset.ofHours(1))
   }
 
+  implicit class StringExtensions(str : String) {
+    def toDateFromInput = (Try {
+      val parsed = LocalDate.parse(str, DateExtensions.inputDateFormatter)
+      new Date(parsed.getYear, parsed.getMonth.getValue, parsed.getDayOfMonth)
+    }).toOption
+
+    def toDateTimeFromInput = (Try{
+      val parsed = LocalDateTime.parse(str, DateTimeExtensions.inputDateTimeFormatter)
+      parsed
+    }).toOption
+
+    def toDoubleFromInput = (Try{
+      str.toDouble
+      //DoubleExtensions.inputFormat.parse(str).doubleValue()
+    }).toOption
+
+  }
+
+
 
   object DoubleExtensions {
     val numberLocale = Locale.forLanguageTag("da-DK")
     val formatPretty = NumberFormat.getInstance(numberLocale).asInstanceOf[DecimalFormat]
     formatPretty.applyPattern("###,##0.00")
+    formatPretty.getDecimalFormatSymbols.setDecimalSeparator(',')
+    formatPretty.getDecimalFormatSymbols.setGroupingSeparator('.')
+
     val inputNumberLocale = Locale.forLanguageTag("en-US")
     val inputFormat = NumberFormat.getInstance(inputNumberLocale).asInstanceOf[DecimalFormat]
     inputFormat.applyPattern("####0.0")
+    inputFormat.getDecimalFormatSymbols.setDecimalSeparator('.')
   }
+
+
 
   object DateExtensions {
     val dateFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy")

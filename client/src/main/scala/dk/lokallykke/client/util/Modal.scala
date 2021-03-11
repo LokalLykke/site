@@ -30,8 +30,10 @@ object Modal {
 
   implicit def jq2bootstrap(jq: JQuery): BootstrapJQuery = jq.asInstanceOf[BootstrapJQuery]
 
+  type ValueResolver =  () => Option[Any]
 
-  def apply(id : String, title : String, fields : Seq[ModalField]) : Map[String, () => Option[Any]] = {
+
+  def apply(id : String, title : String, fields : Seq[ModalField], onSave : Option[(Map[String, ValueResolver]) => Unit] = None) : Unit = {
     val body = $("<div class='modal-body'>")
     val resolvers = scala.collection.mutable.ArrayBuffer.empty[(String, () => Option[Any])]
     val contents = fields.map(bodyContentFromField)
@@ -41,6 +43,18 @@ object Modal {
         valRes.foreach(vr => resolvers += vr)
       }
     }
+
+    val saveButton = $(s"<button id='$id-save-button' type='button' class='btn btn-primary'>").text("Gem")
+    $(saveButton).click((ev : JQueryEventObject) => {
+      val values = resolvers.toMap
+      onSave.foreach(evh => evh(values))
+      $(s"#$id").modal("hide")
+    })
+
+    val footer =  $("<div class='modal-footer'>").append(
+      $(s"<button id='$id-cancel-button' type='button' class='btn btn-secondary' data-dismiss='modal'>").text("Annullér"),
+      saveButton
+      )
 
 
     val modal = $(s"<div class='modal fade' id='$id' role='dialog' aria-labelledby='$id-center-title' aria-hidden='true'>").append(
@@ -52,12 +66,12 @@ object Modal {
               $("<span aria-hidden='true'>").html("&times;")
             )
           ),
-          body
+          body,
+          footer
         )
       )
     )
     displayModal(modal)
-    resolvers.toMap
   }
 
   def bodyContentFromField(field : ModalField) : (JQuery, Option[(String, () => Option[Any])]) = {
@@ -72,8 +86,9 @@ object Modal {
         )
         var retVal : Option[LocalDateTime] = None
         $(input).change((ev : JQueryEventObject) => {
-          val newVal = $(input).value()
-          println(s"New datetime value: ${newVal} of type : ${newVal.getClass}")
+          val newVal = $(s"#$id").value()
+          retVal = if(newVal != null) newVal.toString.toDateTimeFromInput else None
+          println(s"New datetime value: ${retVal} of type : ${newVal.getClass}")
         })
         val valRes = Some((id, () => retVal))
         (input, valRes)
@@ -85,8 +100,9 @@ object Modal {
         )
         var retVal : Option[Date] = None
         $(input).change((ev : JQueryEventObject) => {
-          val newVal = $(input).value()
-          println(s"New date value: ${newVal} of type : ${newVal.getClass}")
+          val newVal = $(s"#$id").value()
+          retVal = if(newVal != null) newVal.toString.toDateFromInput else None
+          println(s"New date value: ${retVal} of type : ${newVal.getClass}")
         })
         val valRes = Some((id, () => retVal))
         (input, valRes)
@@ -95,12 +111,14 @@ object Modal {
       case EditableDouble(id, key, value) => {
         val input = $("<div class='my-2'>").append(
           $(s"<label for='$id' class='form-label'>").text(key),
-          $(s"<input id='$id' type='date' class='form-control' value='${value.map(_.toInputString).getOrElse("")}'>")
+          $(s"<input id='$id' type='number' class='form-control' lang='da-DK' step='0.01' value='${value.map(_.toInputString).getOrElse("")}'>")
         )
+
         var retVal : Option[Double] = None
         $(input).change((ev : JQueryEventObject) => {
-          val newVal = $(input).value()
-          println(s"New double value: ${newVal} of type : ${newVal.getClass}")
+          val newVal = $(s"#$id").value()
+          retVal = if(newVal != null && newVal.toString.size > 0) newVal.toString.toDoubleFromInput else None
+          println(s"New double value: ${retVal} of type : ${newVal.getClass}")
         })
         val valRes = Some((id, () => retVal))
         (input, valRes)
@@ -112,8 +130,12 @@ object Modal {
         )
         var retVal : Option[String] = None
         $(input).change((ev : JQueryEventObject) => {
-          val newVal = $(input).value()
-          println(s"New string value: ${newVal} of type : ${newVal.getClass}")
+          val newVal = $(s"#$id").value()
+          if(newVal != null && newVal.toString.length > 0)
+            retVal = Some(newVal.toString)
+          else retVal = None
+
+          println(s"New string value: ${retVal} of type : ${newVal.getClass}")
         })
         val valRes = Some((id, () => retVal))
         (input, valRes)

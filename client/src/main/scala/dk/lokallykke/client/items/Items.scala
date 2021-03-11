@@ -31,15 +31,18 @@ object Items {
         import dk.lokallykke.client.util.Modal
         import Modal._
         import org.scalajs.dom
+
         val modalContents = List(
           Modal.Image("item-image",Locations.Items.itemImage(item.itemId)),
           Modal.DisplayParagraph("item-description", "This is just a sample text to ensure that everything works as expected."),
-          //Modal.EditableDateTime("item-registered", "Registreret", Some(LocalDateTime.now())),
-          //Modal.EditableDate("item-date", "En dato eller sådan", Some(new Date(Date.now))),
-          Modal.EditableDouble("item-costval", "Købsværdi", Some(100.23)),
+          Modal.EditableDateTime("item-registered", "Registreret", Some(item.registered.toDateTime)),
+          Modal.EditableDate("item-date", "En dato eller sådan", Some(item.registered.toDate)),
+          Modal.EditableDouble("item-costval", "Købsværdi", Some(100000.23)),
           Modal.EditableString("item-caption", "Beskrivelse", Some("Holy hep"))
         )
-        val changedValues = Modal("item-modal", "Redigér genstand", modalContents)
+        Modal("item-modal", "Redigér genstand", modalContents, Some((ret) => {
+          ret.foreach(p => println(s"Returned: ${p._1} = ${p._2}"))
+        }))
       }))
 
       val tableBuilder = TableBuilder[ViewItem]("item-table", columns, inRowHandler = Some(rowHandlerFor))
