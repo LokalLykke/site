@@ -25,9 +25,10 @@ object Messages {
     import dk.lokallykke.client.viewmodel.items._
 
     object ToServer {
-      case class ToServerMessage(messageType : String, viewItem : Option[ViewItem])
+      case class ToServerMessage(messageType : String, viewItem : Option[ViewItem] = None)
 
       val UpdateItem = "UpdateItem"
+      val RequestItems = "RequestItems"
     }
 
     object ToClient {
