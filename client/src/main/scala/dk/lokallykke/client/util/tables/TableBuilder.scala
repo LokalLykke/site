@@ -14,7 +14,7 @@ trait TableBuilder[A] {
 
 object TableBuilder {
 
-  def apply[A](inId : String, inColumns : Seq[Column[A,_]], inRowHandler : Option[A => Option[EventHandler]] = None, inIsBold : Option[A => Boolean] = Some((a : A) => false), imageSize : Int = 75) : TableBuilder[A]  = {
+  def apply[A](inId : String, inColumns : Seq[Column[A,_]], inRowHandler : Option[A => Option[EventHandler]] = None, inIsBold : Option[A => Boolean] = Some((a : A) => false), imageSize : Int = 75, inTableClass : String = "table table-hover") : TableBuilder[A]  = {
     new TableBuilder[A] {
       override val id: String = inId
       override val columns: Seq[Column[A, _]] = inColumns
@@ -22,7 +22,7 @@ object TableBuilder {
       override def buildTable(items: Seq[A]): JQuery = {
         val header = createHeader
         val body = createBody(items)
-        val table = $(s"<table id='$inId' class='table table-hover'>").append(
+        val table = $(s"<table id='$inId' class='$inTableClass'>").append(
           header,
           body
         )

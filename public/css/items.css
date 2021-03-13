@@ -25,9 +25,9 @@ html, body {
 .upload-icon {
   width: 100%;
   height: 80px;
-  fill: #92b03;
+  fill: #4432a8;
   display: block;
-  margin-bottom: 40px;
+  z-index: 100;
 }
 
 .upload-input {

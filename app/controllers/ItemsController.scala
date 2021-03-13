@@ -2,6 +2,7 @@ package controllers
 
 import akka.actor.{Actor, ActorRef, ActorSystem}
 import akka.stream.Materializer
+import dk.lokallykke.client.Messages.Items.ToClient.FileUploadResult
 import dk.lokallykke.client.Messages.Items._
 import dk.lokallykke.client.viewmodel.items.ViewItem
 import lokallykke.db.{Connection, ItemHandler}
@@ -27,10 +28,31 @@ class ItemsController  @Inject()(cc : ControllerComponents, site : Site)(implici
   }
   def socket = wsFrom((out : ActorRef) => new ItemsWSActor(out, site))
 
+  def upload = Action(parse.multipartFormData) {
+    implicit request => {
+
+
+      implicit val itemReads = Json.reads[ViewItem]
+      implicit val itemWrites = Json.writes[ViewItem]
+      implicit val fileUploadResultWrites = Json.writes[FileUploadResult]
+      implicit val messReads = Json.reads[ToServer.ToServerMessage]
+      implicit val messWrites = Json.writes[ToClient.ToClientMessage]
+      val files = request.body.files.map {
+        case file => {
+          FileUploadResult(1L, Some(file.filename), true)
+        }
+      }
+      val outMessage = ToClient.ToClientMessage(None, uploadResult = Some(files))
+
+      Ok(Json.toJson(outMessage))
+    }
+  }
+
 
   class ItemsWSActor(out : ActorRef, site : Site) extends Actor with Pingable {
     implicit val itemReads = Json.reads[ViewItem]
     implicit val itemWrites = Json.writes[ViewItem]
+    implicit val fileUploadResultWrites = Json.writes[FileUploadResult]
     implicit val messReads = Json.reads[ToServer.ToServerMessage]
     implicit val messWrites = Json.writes[ToClient.ToClientMessage]
 
@@ -43,6 +65,8 @@ class ItemsController  @Inject()(cc : ControllerComponents, site : Site)(implici
     override def receive = {
       case mess => Try {
         Json.parse(mess.toString).as[ToServer.ToServerMessage] match {
+          case ToServer.ToServerMessage(ToServer.RequestItems,_) => sendItems
+
           case ToServer.ToServerMessage(ToServer.UpdateItem, item) => {
             item.foreach {
               case it => {

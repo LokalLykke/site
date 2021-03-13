@@ -14,8 +14,22 @@ object JsExtensions {
 
   implicit class DoubleExtensions(d : Double) {
     import DoubleExtensions._
-    def toPrettyString = formatPretty.format(d)
-    def toInputString = inputFormat.format(d)
+    def isZero = {
+      val rem = d % 1.0
+      rem < 0.01 && rem > -0.01
+    }
+    def toPrettyString = {
+      if(isZero) {
+        formatPrettyInt.format(d) + ",00"
+      }
+      else formatPretty.format(d)
+    }
+    def toInputString = {
+      if(isZero) {
+        inputFormatInt.format(d) + ".00"
+      }
+      else inputFormat.format(d)
+    }
   }
 
   implicit class DateExtensions(d : Date) {
@@ -71,10 +85,20 @@ object JsExtensions {
     formatPretty.getDecimalFormatSymbols.setDecimalSeparator(',')
     formatPretty.getDecimalFormatSymbols.setGroupingSeparator('.')
 
+    val formatPrettyInt = NumberFormat.getInstance(numberLocale).asInstanceOf[DecimalFormat]
+    formatPrettyInt.applyPattern("###,##0")
+    formatPrettyInt.getDecimalFormatSymbols.setDecimalSeparator(',')
+    formatPrettyInt.getDecimalFormatSymbols.setGroupingSeparator('.')
+
+
     val inputNumberLocale = Locale.forLanguageTag("en-US")
     val inputFormat = NumberFormat.getInstance(inputNumberLocale).asInstanceOf[DecimalFormat]
-    inputFormat.applyPattern("####0.0")
+    inputFormat.applyPattern("####0.00")
     inputFormat.getDecimalFormatSymbols.setDecimalSeparator('.')
+    val inputFormatInt = NumberFormat.getInstance(inputNumberLocale).asInstanceOf[DecimalFormat]
+    inputFormatInt.applyPattern("####0")
+    inputFormatInt.getDecimalFormatSymbols.setDecimalSeparator('.')
+
   }
 
 

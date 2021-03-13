@@ -7,7 +7,9 @@ object Locations {
   }
 
   object Items {
-    def itemImage(itemId : Long) = s"/items/itemimage?itemId=$itemId"
+    val prefix = "/items"
+    def itemImage(itemId : Long) = s"$prefix/itemimage?itemId=$itemId"
+    def upload = s"$prefix/upload"
   }
 
 

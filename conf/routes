@@ -1,6 +1,8 @@
 
 GET     /items/itemimage                        controllers.LokalLykkeAssets.itemImage(itemId : Long)
 GET     /items/ws                               controllers.ItemsController.socket
++nocsrf
+POST    /items/upload                           controllers.ItemsController.upload
 GET     /items                                  controllers.ItemsController.index()
 
 GET     /accounting/ws                          controllers.AccountingController.socket

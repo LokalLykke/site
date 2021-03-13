@@ -29,10 +29,15 @@ object Messages {
 
       val UpdateItem = "UpdateItem"
       val RequestItems = "RequestItems"
+
     }
 
     object ToClient {
-      case class ToClientMessage(items : Option[Seq[ViewItem]])
+      case class ToClientMessage(items : Option[Seq[ViewItem]], uploadResult : Option[Seq[FileUploadResult]] = None)
+
+      case class FileUploadResult(id : Long, fileName : Option[String], success : Boolean)
+
+
     }
 
   }

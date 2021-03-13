@@ -8,27 +8,10 @@ import scala.scalajs.js.Date
 import scala.scalajs.js.annotation.JSImport
 
 object Modal {
+  import dk.lokallykke.client.util.JQueryExtensions._
 
   val ModalDivId = "main-modal-holder"
 
-  private object BootstrapLib {
-    @js.native
-    @JSImport("bootstrap", JSImport.Namespace)
-    object BootstrapModule extends js.Object
-
-    private lazy val dummy = BootstrapModule
-
-    def load() = dummy
-  }
-  BootstrapLib.load()
-
-  @js.native
-  trait BootstrapJQuery extends JQuery {
-    def modal(action: String): BootstrapJQuery = js.native
-    def modal(options: js.Any): BootstrapJQuery = js.native
-  }
-
-  implicit def jq2bootstrap(jq: JQuery): BootstrapJQuery = jq.asInstanceOf[BootstrapJQuery]
 
   type ValueResolver =  () => Option[Any]
 

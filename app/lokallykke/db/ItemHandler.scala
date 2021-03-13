@@ -9,6 +9,8 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import lokallykke.helpers.Extensions._
 
+import java.sql.Timestamp
+
 trait ItemHandler {
   private val logger = LoggerFactory.getLogger(this.getClass)
 
@@ -31,6 +33,11 @@ trait ItemHandler {
     val ret = Await.result(db.run(insertAndReturnItem ++= insertees), dt)
     logger.info(s"Inserted ${insertees.size} items")
     ret
+  }
+
+  def createItemFromImage(image : Array[Byte]) : Item = {
+    val insertee = Item(-1L, None, None, image, None, None, None, new Timestamp(System.currentTimeMillis),None, None, None, None, None )
+    Await.result(db.run(insertAndReturnItem += insertee), dt)
   }
 
   def changeImage(itemId : Long, bytes : Array[Byte], width : Option[Int], height : Option[Int]): Unit = {
