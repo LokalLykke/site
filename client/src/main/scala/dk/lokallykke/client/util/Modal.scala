@@ -16,7 +16,7 @@ object Modal {
   type ValueResolver =  () => Option[Any]
 
 
-  def apply(id : String, title : String, fields : Seq[ModalField], onSave : Option[(Map[String, ValueResolver]) => Unit] = None) : Unit = {
+  def apply(id : String, title : String, fields : Seq[ModalField], onSave : Option[(Map[String, ValueResolver]) => Unit] = None, saveText : String = "Gem", cancelText : String = "Annuller") : Unit = {
     val body = $("<div class='modal-body'>")
     val resolvers = scala.collection.mutable.ArrayBuffer.empty[(String, () => Option[Any])]
     val contents = fields.map(bodyContentFromField)
@@ -27,7 +27,7 @@ object Modal {
       }
     }
 
-    val saveButton = $(s"<button id='$id-save-button' type='button' class='btn btn-primary'>").text("Gem")
+    val saveButton = $(s"<button id='$id-save-button' type='button' class='btn btn-primary'>").text(saveText)
     $(saveButton).click((ev : JQueryEventObject) => {
       val values = resolvers.toMap
       onSave.foreach(evh => evh(values))
@@ -35,7 +35,7 @@ object Modal {
     })
 
     val footer =  $("<div class='modal-footer'>").append(
-      $(s"<button id='$id-cancel-button' type='button' class='btn btn-secondary' data-dismiss='modal'>").text("Annullér"),
+      $(s"<button id='$id-cancel-button' type='button' class='btn btn-secondary' data-dismiss='modal'>").text(cancelText),
       saveButton
       )
 
@@ -62,6 +62,7 @@ object Modal {
     val ret = field match {
       case DisplayParagraph(id,text) => ($(s"<p id='$id'>").html(text), None.asInstanceOf[Option[(String,() => Option[Any])]])
       case Image(id, url) => ($(s"<img src='$url' class='img-fluid'>"),None.asInstanceOf[Option[(String, () => Option[Any])]])
+      case EmbeddedImage(dataString) => ($(s"<img src='$dataString' class='img-fluid'>"),None.asInstanceOf[Option[(String, () => Option[Any])]])
       case EditableDateTime(id, key, value) => {
         val input = $("<div class='my-2'>").append(
           $(s"<label for='$id' class='form-label'>").text(key),
@@ -130,6 +131,12 @@ object Modal {
     modal.modal("show")
   }
 
+  def Accept(title : String, text : String, acceptHandler : () => Any, acceptText : String = "Ok", cancelText : String = "Annuller") = {
+    Modal("builtin-accept-modal", title, List(DisplayParagraph("builtin-accept-text", text)), Some( (in : Map[String, ValueResolver]) => {
+      acceptHandler()
+    }), saveText = acceptText, cancelText = cancelText)
+  }
+
   sealed trait ModalField
   case class EditableString(id : String, key : String, value : Option[String]) extends ModalField
   case class EditableDouble(id : String, key : String, value : Option[Double]) extends ModalField
@@ -137,6 +144,7 @@ object Modal {
   case class EditableDateTime(id : String, key : String, value : Option[LocalDateTime]) extends ModalField
   case class DisplayParagraph(id : String, text : String) extends ModalField
   case class Image(id : String, url : String) extends ModalField
+  case class EmbeddedImage(dataString : String) extends ModalField
 
 
 

@@ -17,7 +17,7 @@ object InstagramLoader {
 
 
 
-  def downloadItems = {
+  def downloadItems(implicit loaderObserver : LoaderObserver = LoaderObserver.Sink) = {
     if(ResultDir.exists())
       ResultDir.delete()
     val cmd = Process(Seq(
@@ -28,15 +28,19 @@ object InstagramLoader {
       "--password=CovidLokalt83",
       "lokallykke"),
       OutputDir)
+    loaderObserver.onProgressChange(LoaderObserver.ParsingState.Downloading)
     val res = cmd.!!
+    loaderObserver.onCommandLineUpdate(res)
     logger.info(s"Result from InstagramLoader:")
     logger.info(res)
     val parsed = parseResponse
+    loaderObserver.onProgressChange(LoaderObserver.ParsingState.Done)
     logger.info(s"Downloaded and parsed ${parsed.size} items from Instagram")
     parsed
   }
 
-  def parseResponse = {
+  def parseResponse(implicit loaderObserver : LoaderObserver) = {
+    loaderObserver.onProgressChange(LoaderObserver.ParsingState.Parsing)
     val read = ResultDir.listFiles().filter(_.getName.contains(""".""")).map {
       case file => {
         val byts = FileUtils.readFileToByteArray(file)
@@ -55,7 +59,7 @@ object InstagramLoader {
           case (Some(jsEnt), Some(imgEnt)) => {
             parseJson(jsEnt._4) match {
               case None => None
-              case Some((id, width, height, caption, timestamp)) => Some(InstagramItem(id, imgEnt._4, width, height, caption.orElse(fileCaption), new Timestamp(timestamp * 1000L)))
+              case Some((id, width, height, caption, timestamp)) => Some(InstagramItem(id, imgEnt._4, width, height, caption.orElse(fileCaption), new Timestamp(timestamp * 1000L), imgEnt._2))
             }
           }
         }
@@ -72,12 +76,11 @@ object InstagramLoader {
         val node = obj.value("node")
         val height = (node \ "dimensions" \ "height").as[Int]
         val width = (node \ "dimensions" \ "width").as[Int]
-        val id = (node \ "id").as[String].toLong
+        val id = (node \ "id").as[String]
         val caption = (node \ "edge_media_to_caption" \ "edges") match {
           case arr : JsArray => Some(arr.value.map(_ \ "node" \ "text").map(_.as[String]).mkString(""))
           case _ => None
         }
-        println(caption)
         val timestamp = (node \ "taken_at_timestamp").as[Long]
         Some((id, width, height, caption, timestamp))
       }
@@ -89,6 +92,7 @@ object InstagramLoader {
   private def isWindows : Boolean = {
     println(System.getProperty("os.name")).toString.toLowerCase.contains("win")
   }
+
 
 
 }

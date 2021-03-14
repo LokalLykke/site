@@ -1,6 +1,6 @@
 package dk.lokallykke.client.util.tables
 
-import org.querki.jquery.{$, EventHandler, JQuery}
+import org.querki.jquery.{$, EventHandler, JQuery, JQueryEventObject}
 
 import scala.scalajs.js.annotation.JSExportTopLevel
 
@@ -51,14 +51,37 @@ object TableBuilder {
             inColumns.foreach {
               case col => {
                 val td = $("<td>")
-                col.imageUrl(item) match {
-                  case Some(url) => {
+                val classes = col.classes(item)
+                val doCreate = col.doCreate(item)
+                (col.isButton, col.imageUrl(item), col.dataString(item)) match {
+                  case _ if doCreate == false =>
+                  case (true, _,_)  => {
+                    val cls = classes.getOrElse("btn btn-primary")
+                    val button = $(s"<button type='button' class='$cls'>").text(col.stringValue(item))
+                    col.onButtonPressed.foreach {
+                      case handler => {
+                        $(button).click((obj : JQueryEventObject) => {
+                          obj.stopPropagation()
+                          handler(obj, item)
+                        })
+                      }
+                    }
+                    $(td).append(button)
+                  }
+                  case (_,_,Some(dataString)) => {
+                    $(td).append($("<div>").append(
+                      $(s"<img src='$dataString' height='$imageSize' width='$imageSize' class='item-image'>"),
+                      $("<a href='#'>")
+                    ))
+                  }
+
+                  case (_,Some(url),_) => {
                     $(td).append($("<div>").append(
                       $(s"<img src='$url' height='$imageSize' width='$imageSize' class='item-image'>"),
                       $("<a href='#'>")
                     ))
                   }
-                  case None => {
+                  case (_,None,_) => {
                     val value = col.stringValue(item)
                     $(td).text(value)
                   }

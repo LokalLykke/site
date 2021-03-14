@@ -1,11 +1,13 @@
 package dk.lokallykke.client.items
 
 import dk.lokallykke.client.Locations
-import dk.lokallykke.client.Messages.Items.ToClient.{FileUploadResult, ToClientMessage}
+import dk.lokallykke.client.Messages.Items.ToClient.{FileUploadResult, InstagramResult, ToClientMessage}
+import dk.lokallykke.client.Messages.Items.{ToClient, ToServer}
+import dk.lokallykke.client.Messages.Items.ToServer.ToServerMessage
 import dk.lokallykke.client.viewmodel.items.ViewItem
 import org.querki.jquery.{$, ElementDesc, EventHandler, JQueryAjaxSettings, JQueryEventObject, JQueryXHR}
 import dk.lokallykke.client.util.JsExtensions._
-import dk.lokallykke.client.util.WSConnector
+import dk.lokallykke.client.util.{CommonUtil, Modal, WSConnector}
 import dk.lokallykke.client.util.tables.{Column, TableBuilder}
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.{Decoder, Json, JsonObject}
@@ -31,10 +33,16 @@ object Items {
   val ItemsNavSoldId = "items-nav-sold"
   val ItemsNavAllId = "items-nav-all"
   val ItemsUploadBoxId = "items-upload-box"
+  val ItemsFromInstagramId = "items-nav-instagram"
   val ItemsFileInputId = "items-files-input"
+  val ItemsInstagramTextareaId = "items-instagram-textarea"
+
+  var uploadedFiles = Seq.empty[UploadedFile]
+  var instagramItems = Seq.empty[InstagramItem]
 
 
   object Tables {
+    import Modal._
     import Column._
     object ItemTable {
       val imageCol = ImageColumn[ViewItem]("image", "Billede", None, en => Some(Locations.Items.itemImage(en.itemId)))
@@ -42,12 +50,16 @@ object Items {
       val captionCol = StringColumn[ViewItem]("caption", "Beskrivelse",_.caption)
       val registeredCol = DateTimeColumn[ViewItem]("registered", "Registreret", en => Some(en.registered.toDateTime))
       val costValueCol = DoubleColumn[ViewItem]("costvalue", "Købsværdi", en => en.costValue )
-      val askPriceCol = DoubleColumn[ViewItem]("askprice", "Til salg for", en => en.askPrice )
-      val columns = Seq(imageCol, nameCol, captionCol, registeredCol, costValueCol, askPriceCol)
+      val askPriceCol = DoubleColumn[ViewItem]("askprice", "Til salg for", en => en.askPrice)
+      val deleteCol = ButtonColumn[ViewItem]("delete", "Slet", "Slet", Some((obj : JQueryEventObject, en : ViewItem) =>  {
+        Modal.Accept("Vil du virkeligt slette?", s"Er du sikker på at du vil slette: ${en.name.getOrElse(s"genstand med ID: ${en.itemId}")}",() => {
+          ItemsConnector.send(ToServer.ToServerMessage(ToServer.DeleteItemAndLoad, itemId = Some(en.itemId)))
+        })
+      }), inClasses = Some((a : ViewItem) => "btn btn-danger"))
+      val columns = Seq(imageCol, nameCol, captionCol, registeredCol, costValueCol, askPriceCol, deleteCol)
 
       def rowHandlerFor(item : ViewItem) : Option[EventHandler] =  Some(((obj : JQueryEventObject) => {
         import dk.lokallykke.client.util.Modal
-        import Modal._
         import org.scalajs.dom
 
         val modalContents = List(
@@ -71,11 +83,115 @@ object Items {
           ItemsConnector.sendViewItemUpdate(updated)
         }))
       }))
-
       val tableBuilder = TableBuilder[ViewItem]("item-table", columns, inRowHandler = Some(rowHandlerFor))
+    }
+
+    object UploadedFileTable {
+      val imageCol = ImageColumn[UploadedFile]("image", "Billede", None, en => Some(Locations.Items.itemImage(en.viewItem.itemId)))
+      val fileNameCol = StringColumn[UploadedFile]("filename", "Filnavn",_.fileName)
+      val nameCol = StringColumn[UploadedFile]("name", "Navn",_.viewItem.name)
+      val captionCol = StringColumn[UploadedFile]("caption", "Beskrivelse",_.viewItem.caption)
+      val costValueCol = DoubleColumn[UploadedFile]("costvalue", "Købsværdi", en => en.viewItem.costValue )
+      val askPriceCol = DoubleColumn[UploadedFile]("askprice", "Til salg for", en => en.viewItem.askPrice )
+      val deleteCol = ButtonColumn[UploadedFile]("delete", "Slet", "Slet", Some((obj : JQueryEventObject, en : UploadedFile)  => {
+        uploadedFiles = uploadedFiles.filter(_.itemid != en.itemid)
+        show()
+        ItemsConnector.send(ToServer.ToServerMessage(ToServer.DeleteItem, itemId = Some(en.itemid)))
+      }), inClasses = Some((a : UploadedFile) => "btn btn-danger btn-sm"))
+
+      val columns = Seq(imageCol, fileNameCol, nameCol, captionCol, costValueCol, askPriceCol, deleteCol)
+
+      def rowHandlerFor(item : UploadedFile) : Option[EventHandler] =  Some(((obj : JQueryEventObject) => {
+        import dk.lokallykke.client.util.Modal
+        import org.scalajs.dom
+
+        val modalContents = List(
+          Modal.Image("item-image",Locations.Items.itemImage(item.itemid)),
+          Modal.EditableString("item-name", "Navn", item.viewItem.name),
+          Modal.EditableString("item-caption", "Beskrivelse", item.viewItem.name),
+          Modal.EditableDouble("item-costval", "Købsværdi", item.viewItem.costValue),
+          Modal.EditableDouble("item-askprice", "Til salg for", item.viewItem.askPrice)
+        )
+        Modal("item-modal", "Redigér genstand", modalContents, Some((ret) => {
+          var updated = item.viewItem
+          ret.map(p => p._1 -> p._2()).foreach {
+            case ("item-name", n : Option[String]) => updated = updated.copy(name = n)
+            case ("item-caption", n : Option[String]) => updated = updated.copy(caption = n)
+            case ("item-costval", d : Option[Double]) => updated = updated.copy(costValue = d)
+            case ("item-askprice", d : Option[Double]) => updated = updated.copy(askPrice = d)
+            case (itId,v) => {
+              println(s"Found no way to update field: ${itId} with value: $v")
+            }
+          }
+          uploadedFiles = uploadedFiles.map(en => if(en.itemid == item.itemid) item.copy(viewItem = updated) else en)
+          show()
+          ItemsConnector.send(ToServer.ToServerMessage(ToServer.UpdateItem, Some(updated)))
+        }))
+      }))
+      val tableBuilder = TableBuilder[UploadedFile]("item-uploaded-file", columns, inRowHandler = Some(rowHandlerFor), imageSize = 40, inTableClass = "table table-hover table-sm")
+
+      def show() : Unit = {
+        $(s"#$ItemsContentSubId").empty()
+        val tab = tableBuilder.buildTable(uploadedFiles)
+        $(s"#$ItemsContentSubId").append(tab)
+      }
 
 
     }
+
+    object InstagramTable {
+      val imageCol = ImageColumn[InstagramItem]("image", "Billede", bytesFor = (en : InstagramItem) => en.instagramResult.bytes, fileTypeFor =  (en : InstagramItem) => en.instagramResult.fileType, None)
+      val fileNameCol = StringColumn[InstagramItem]("name", "Navn",_.name)
+      val nameCol = StringColumn[InstagramItem]("caption", "Beskrivelse",_.captionToUse)
+      val costValueCol = DoubleColumn[InstagramItem]("costvalue", "Købsværdi", en => en.costValue )
+      val askPriceCol = DoubleColumn[InstagramItem]("askprice", "Til salg for", en => en.askPrice )
+      val importCol = ButtonColumn[InstagramItem]("create-item", "Importér", "Importér", Some((obj : JQueryEventObject, en : InstagramItem)  => {
+        val toSend = ToServer.ToServerMessage(ToServer.CreateInstagramItem, instagramItem = Some(ToServer.InstagramItem(en.instagramId , en.name, en.captionToUse, en.costValue, en.askPrice)))
+        ItemsConnector.send(toSend)
+
+      }), inClasses = Some((a : InstagramItem) => "btn btn-secondary btn-sm"))
+
+      val columns = Seq(imageCol, fileNameCol, nameCol, costValueCol, askPriceCol, importCol)
+
+      def rowHandlerFor(item : InstagramItem) : Option[EventHandler] =  Some(((obj : JQueryEventObject) => {
+        import dk.lokallykke.client.util.Modal
+        import org.scalajs.dom
+
+        val modalContents = List(
+          Modal.EmbeddedImage(CommonUtil.toImageDataString(item.instagramResult.bytes, item.instagramResult.fileType)),
+          Modal.EditableString("instagram-name", "Navn", item.name),
+          Modal.EditableString("instagram-caption", "Beskrivelse", item.captionToUse),
+          Modal.EditableDouble("instagram-costval", "Købsværdi", item.costValue),
+          Modal.EditableDouble("instagram-askprice", "Til salg for", item.costValue)
+        )
+        Modal("instagram-modal", "Redigér genstand", modalContents, Some((ret) => {
+          var updated = item
+          ret.map(p => p._1 -> p._2()).foreach {
+            case ("instagram-name", n : Option[String]) => updated = updated.copy(name = n)
+            case ("instagram-caption", n : Option[String]) => updated = updated.copy(caption = n)
+            case ("instagram-costval", d : Option[Double]) => updated = updated.copy(costValue = d)
+            case ("instagram-askprice", d : Option[Double]) => updated = updated.copy(askPrice = d)
+            case (itId,v) => {
+              println(s"Found no way to update field: ${itId} with value: $v")
+            }
+          }
+          instagramItems = instagramItems.map(en => if(en.instagramId == item.instagramId) updated else en)
+          show()
+        }))
+      }))
+
+
+      val tableBuilder = TableBuilder[InstagramItem]("item-instagram-item", columns, inRowHandler = Some(rowHandlerFor), imageSize = 40, inTableClass = "table table-hover table-sm")
+
+      def show() : Unit = {
+        clearContent()
+        val tab = tableBuilder.buildTable(instagramItems)
+        $(s"#$ItemsContentSubId").append(tab)
+      }
+
+
+    }
+
   }
 
   @JSExport
@@ -111,8 +227,13 @@ object Items {
     $("[typ='items-nav']").removeAttr("aria-current").removeClass("active")
     $(s"#$selected").attr("aria-current", "page").addClass("active")
     clearContent()
+    uploadedFiles = Nil
 
     selected match {
+      case ItemsFromInstagramId => {
+        ItemsConnector.send(ToServerMessage(ToServer.LoadInstagramItems))
+        prepareForInstagramStatus()
+      }
       case ItemsNavUploadId => {
         insertFileUpload()
       }
@@ -175,58 +296,56 @@ object Items {
       contentType = false,
       processData = false,
       complete = (jq : JQueryXHR) => {
-        println(s"Completed upload")
       },
       success = (data : js.Any, textStatus : String, jqXHR : JQueryXHR) => {
         Try {
           implicit val fileResultDecoder : Decoder[FileUploadResult] = deriveDecoder[FileUploadResult]
           implicit val viewItemDecoder : Decoder[ViewItem] = deriveDecoder[ViewItem]
+          implicit val instagramItemDecoder : Decoder[InstagramResult] = deriveDecoder[InstagramResult]
           implicit val decoder : Decoder[ToClientMessage] = deriveDecoder[ToClientMessage]
           import io.circe.parser.parse
           val stringified = JSON.stringify(data)
-          println(s"Stringified: $stringified")
           val parseResult = parse(stringified)
-          parseResult match {
-            case Left(err) => {
-              err.printStackTrace()
-            }
-            case Right(passi) => {
-
-            }
+          println(s"Parse result: $parseResult")
+          for(
+            json <- parseResult.toOption;
+            mess <- json.as[ToClientMessage];
+            items <- mess.items;
+            res <- mess.uploadResult
+          )  {
+            println(s"Will add uploaded files table")
+            val itemsMap = items.map(en => en.itemId -> en).toMap
+            uploadedFiles = uploadedFiles ++ res.filter(_.success).map(r => UploadedFile(r.id, r.fileName, itemsMap(r.id)))
+            Tables.UploadedFileTable.show()
           }
-          println(s"The parseresult: $parseResult")
         }
-
-        println(s"Hombo: data: $data of type: ${data.getClass} textStatus : $textStatus")
       }
-      /*success = (data : Any) => {
-        println("Hombom lombom")
-        val tessa = data
-        val message = data.asInstanceOf[ToClientMessage]
-        println(s"It's just a message: ${message.toString}")
-        import io.circe.parser._
-        import io.circe.generic.auto._
-
-        parse(data.toString).foreach {
-          case js => {
-            println(s"Got back json : $js")
-            val messOpt = js.as[ToClientMessage]
-            messOpt.foreach {
-              case mess => {
-                mess.uploadResult.toList.flatten.foreach(res => println(s"${res.fileName}"))
-              }
-            }
-          }
-        }
-      }*/
     ).asInstanceOf[JQueryAjaxSettings]
     $.ajax(Locations.Items.upload, settings)
-
-
   }
 
-  case class FileSubmitData(url : String, `type` : String, data : FormData, dataType : String, cache : Boolean = false, processData : false )
+  def prepareForInstagramStatus() = {
+    clearContent()
+    $(s"#$ItemsContentId").append(
+      $(s"<div class='d-flex justify-content-center'>").append(
+        $(s"<textarea class='form-control mx-3 my-5' id='${ItemsInstagramTextareaId}' rows='10' cols='5' disabled>")
+      )
+    )
+  }
 
+  def updateWithInstagramStatus(status : String) = {
+    val currentValue = $(s"#$ItemsInstagramTextareaId").value()
+    val currentString = currentValue match {
+      case _ if currentValue == null => ""
+      case dyn => dyn.asInstanceOf[String]
+    }
+    $(s"#$ItemsInstagramTextareaId").value(currentString + "\n\r" + status)
+  }
+
+  case class UploadedFile(itemid : Long, fileName : Option[String], viewItem : ViewItem)
+  case class InstagramItem(instagramId : String, name : Option[String], caption : Option[String], costValue : Option[Double], askPrice : Option[Double], instagramResult : ToClient.InstagramResult) {
+    def captionToUse = caption.orElse(instagramResult.caption)
+  }
 
 
 
@@ -244,7 +363,7 @@ object Items {
 
 
     def sendViewItemUpdate(item : ViewItem) : Unit = {
-      val mess = ToServer.ToServerMessage(ToServer.UpdateItem, Some(item))
+      val mess = ToServer.ToServerMessage(ToServer.UpdateItemAndLoad, Some(item))
       send(mess)
     }
 
@@ -256,11 +375,24 @@ object Items {
               insertTable(its)
             }
           }
+          mess.instagramUpdate.foreach(status => updateWithInstagramStatus(status))
+          mess.instagramResults.foreach {
+            case res => {
+              instagramItems = res.map(en => InstagramItem(en.instagramId, None, en.caption, None, None, en))
+              Tables.InstagramTable.show()
+            }
+          }
+          mess.uploadedInstagramItem.foreach {
+            case id => {
+              instagramItems = instagramItems.filter(_.instagramId != id)
+              Tables.InstagramTable.show()
+            }
+          }
         }
       }
     })
 
-    private def send(mess : ToServer.ToServerMessage) : Unit = {
+    def send(mess : ToServer.ToServerMessage) : Unit = {
       val asJson : Json = mess.asJson
       super.!(asJson.toString())
 

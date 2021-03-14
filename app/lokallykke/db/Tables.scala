@@ -29,7 +29,7 @@ trait Tables {
 
     class ItemTable(tag : Tag) extends Table[Item](tag, "ITEMS") {
       def id = column[Long]("ITEMID", O.PrimaryKey, O.AutoInc)
-      def instagramId = column[Option[Long]]("INSTAID")
+      def instagramId = column[Option[String]]("INSTAID")
       def name = column[Option[String]]("ITEMNAME")
       def bytes = column[Array[Byte]]("FILEBYTES")
       def width = column[Option[Int]]("WIDTH")

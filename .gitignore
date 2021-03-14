@@ -24,3 +24,4 @@ info.txt
 /shared/js/target/
 /shared/jvm/target/
 /client/target/
+/RUNNING_PID

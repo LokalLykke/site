@@ -8,7 +8,6 @@ lazy val root = (project in file("."))
     name := """lokallykke-site""",
     scalaJSProjects := Seq(client),
     pipelineStages in Assets := Seq(scalaJSPipeline),
-//    pipelineStages := Seq(digest, gzip)
     compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
     libraryDependencies ++= Seq(
       guice,
@@ -29,7 +28,7 @@ lazy val root = (project in file("."))
     }.taskValue/*,
     unmanagedSources += client.*/
   )
-  .enablePlugins(PlayScala)
+  .enablePlugins(PlayScala, LauncherJarPlugin)
   .dependsOn(client)
 
 
@@ -48,7 +47,7 @@ lazy val client = (project in file("client"))
       "io.github.cquiroz" %%% "locales-minimal-en-db" % "1.1.1",
       "io.github.cquiroz" %%% "scala-java-time" % "2.2.0"
     ),
-    npmDependencies in Compile ++= Seq("jquery" -> "3.6.0", "bootstrap" -> "4.6.0"),
+    npmDependencies in Compile ++= Seq("jquery" -> "3.6.0", "bootstrap" -> "4.6.0", "@types/selectize" -> "0.12.34"),
     sourceGenerators in Compile += Def.task {
       val _ = (npmInstallDependencies in Compile).value
       Seq.empty[File]

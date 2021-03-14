@@ -5,17 +5,23 @@ import akka.stream.Materializer
 import dk.lokallykke.client.Messages.Items.ToClient.FileUploadResult
 import dk.lokallykke.client.Messages.Items._
 import dk.lokallykke.client.viewmodel.items.ViewItem
+import lokallykke.Cache
 import lokallykke.db.{Connection, ItemHandler}
+import lokallykke.instagram.LoaderObserver.ParsingState
+import lokallykke.instagram.LoaderObserver.ParsingState.ParsingState
+import lokallykke.instagram.{InstagramLoader, LoaderObserver}
 import lokallykke.scheduled.Pingable
 import lokallykke.structure.Site
+import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
-import play.api.libs.json.Json
+import play.api.libs.json.{Json, Reads, Writes}
 import play.api.mvc._
 
 import javax.inject.Inject
 import scala.util.{Failure, Success, Try}
 
 class ItemsController  @Inject()(cc : ControllerComponents, site : Site)(implicit inSys : ActorSystem, inMat : Materializer) extends PageController(cc) {
+  import ItemsController._
 
   val handler = site.itemHandler
 
@@ -30,31 +36,24 @@ class ItemsController  @Inject()(cc : ControllerComponents, site : Site)(implici
 
   def upload = Action(parse.multipartFormData) {
     implicit request => {
-
-
-      implicit val itemReads = Json.reads[ViewItem]
-      implicit val itemWrites = Json.writes[ViewItem]
-      implicit val fileUploadResultWrites = Json.writes[FileUploadResult]
-      implicit val messReads = Json.reads[ToServer.ToServerMessage]
-      implicit val messWrites = Json.writes[ToClient.ToClientMessage]
       val files = request.body.files.map {
         case file => {
-          FileUploadResult(1L, Some(file.filename), true)
+          val bytz = FileUtils.readFileToByteArray(file.ref)
+          val created = site.itemHandler.createItemFromImage(bytz)
+          FileUploadResult(created.id, Some(file.filename), true)
         }
       }
-      val outMessage = ToClient.ToClientMessage(None, uploadResult = Some(files))
+      val items = ItemsController.loadItems(site.itemHandler, files.map(_.id))
+      val outMessage = ToClient.ToClientMessage(uploadResult = Some(files), items = Some(items))
 
       Ok(Json.toJson(outMessage))
     }
   }
 
 
+
   class ItemsWSActor(out : ActorRef, site : Site) extends Actor with Pingable {
-    implicit val itemReads = Json.reads[ViewItem]
-    implicit val itemWrites = Json.writes[ViewItem]
-    implicit val fileUploadResultWrites = Json.writes[FileUploadResult]
-    implicit val messReads = Json.reads[ToServer.ToServerMessage]
-    implicit val messWrites = Json.writes[ToClient.ToClientMessage]
+    import ItemsController._
 
     def sendItems = {
       val items = ItemsController.loadItems(site.itemHandler, false)
@@ -64,18 +63,55 @@ class ItemsController  @Inject()(cc : ControllerComponents, site : Site)(implici
 
     override def receive = {
       case mess => Try {
-        Json.parse(mess.toString).as[ToServer.ToServerMessage] match {
-          case ToServer.ToServerMessage(ToServer.RequestItems,_) => sendItems
-
-          case ToServer.ToServerMessage(ToServer.UpdateItem, item) => {
-            item.foreach {
+        val message = Json.parse(mess.toString).as[ToServer.ToServerMessage]
+        message.messageType match {
+          case ToServer.DeleteItemAndLoad => {
+            message.itemId.foreach(id => site.itemHandler.deleteItem(id))
+            sendItems
+          }
+          case ToServer.DeleteItem => {
+            message.itemId.foreach(id => site.itemHandler.deleteItem(id))
+          }
+          case ToServer.RequestItems => {
+            sendItems
+          }
+          case ToServer.UpdateItemAndLoad => {
+            message.viewItem.foreach {
               case it => {
                 site.itemHandler.updateItem(it.itemId, it.name, it.caption, it.costValue, it.askPrice)
                 sendItems
               }
             }
           }
-          case ToServer.ToServerMessage(messTyp, _) => {
+          case ToServer.UpdateItem => {
+            message.viewItem.foreach {
+              case it => {
+                site.itemHandler.updateItem(it.itemId, it.name, it.caption, it.costValue, it.askPrice)
+              }
+            }
+          }
+          case ToServer.LoadInstagramItems => {
+            val loaded = ItemsController.loadFromInstagram(out)
+            val existing = site.itemHandler.distinctInstagramIds
+            val converted = loaded.filter(en => !existing(en.id)).map(en => ToClient.InstagramResult(en.id, en.caption, en.bytes, en.filetype))
+            out ! Json.toJson(ToClient.ToClientMessage(instagramResults = Some(converted)))
+            loaded.foreach(it => Cache.InstagramImages.cache(it.id, it.bytes))
+          }
+          case ToServer.CreateInstagramItem => {
+            message.instagramItem.foreach {
+              case item => {
+                Cache.InstagramImages.pop(item.instagramId).foreach {
+                  case bytes => {
+                    site.itemHandler.createItem(Some(item.instagramId), bytes, item.name, item.caption, item.costValue, item.askPrice)
+                    val mess = ToClient.ToClientMessage(uploadedInstagramItem = Some(item.instagramId))
+                    out ! Json.toJson(mess)
+                  }
+                }
+              }
+            }
+          }
+
+          case messTyp => {
             logger.info(s"Don't know what to do with: $messTyp")
           }
         }
@@ -93,10 +129,42 @@ class ItemsController  @Inject()(cc : ControllerComponents, site : Site)(implici
 
 object ItemsController {
 
+  private val instagramLock = "Locks"
+  implicit val itemReads : Reads[ViewItem] = Json.reads[ViewItem]
+  implicit val instagramReads : Reads[ToServer.InstagramItem] = Json.reads[ToServer.InstagramItem]
+  implicit val messReads : Reads[ToServer.ToServerMessage] = Json.reads[ToServer.ToServerMessage]
+  implicit val itemWrites : Writes[ViewItem] = Json.writes[ViewItem]
+  implicit val fileUploadResultWrites : Writes[FileUploadResult] = Json.writes[FileUploadResult]
+  implicit val instagramResultWrites : Writes[ToClient.InstagramResult] = Json.writes[ToClient.InstagramResult]
+  implicit val messWrites : Writes[ToClient.ToClientMessage] = Json.writes[ToClient.ToClientMessage]
+
   def loadItems(handler : ItemHandler, includeSold : Boolean) = {
     handler.loadItems(includeSold).map {
       case it => ViewItem(it.id, it.instagramId, it.name, it.caption, it.registered.getTime, it.costvalue, it.askprice)
     }
   }
+
+  def loadItems(handler : ItemHandler, itemIds : Seq[Long]) = {
+    handler.loadItems(itemIds).map {
+      case it => ViewItem(it.id, it.instagramId, it.name, it.caption, it.registered.getTime, it.costvalue, it.askprice)
+    }
+  }
+
+  def loadFromInstagram(out : ActorRef) = instagramLock.synchronized {
+    implicit val observer = new LoaderObserver {
+      override def onCommandLineUpdate(str: String): Unit = out ! Json.toJson(ToClient.ToClientMessage(instagramUpdate = Some(str)))
+
+      override def onProgressChange(state: ParsingState): Unit = {
+        val str = state match {
+          case ParsingState.Downloading => "Downloading posts from Instagram"
+          case ParsingState.Parsing => "Parsing downloads"
+          case _ => "Finished downloading Instagram posts"
+        }
+        out ! Json.toJson(ToClient.ToClientMessage(instagramUpdate = Some(str)))
+      }
+    }
+    InstagramLoader.downloadItems
+  }
+
 
 }

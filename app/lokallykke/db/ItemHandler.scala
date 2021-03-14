@@ -9,7 +9,7 @@ import scala.concurrent.Await
 import scala.concurrent.duration._
 import lokallykke.helpers.Extensions._
 
-import java.sql.Timestamp
+import java.sql.{Time, Timestamp}
 
 trait ItemHandler {
   private val logger = LoggerFactory.getLogger(this.getClass)
@@ -21,7 +21,7 @@ trait ItemHandler {
   import profile.api._
   private implicit val dt = 30.seconds
 
-  def existingInstagramIds(seq : Seq[Item]) : Set[Long]
+  def existingInstagramIds(seq : Seq[Item]) : Set[String]
 
   private lazy val insertAndReturnItem = items.returning(items.map(_.id)).into((it, id) => it.copy(id = id))
 
@@ -40,6 +40,12 @@ trait ItemHandler {
     Await.result(db.run(insertAndReturnItem += insertee), dt)
   }
 
+  def createItem(instagramId : Option[String], image : Array[Byte], name : Option[String], caption : Option[String], costVal : Option[Double], askPrice : Option[Double]) : Item = {
+    val insertee = Item(-1L, instagramId, name, image, None, None, caption, new Timestamp(System.currentTimeMillis),costVal, None, None, None, askPrice)
+    Await.result(db.run(insertAndReturnItem += insertee), dt)
+
+  }
+
   def changeImage(itemId : Long, bytes : Array[Byte], width : Option[Int], height : Option[Int]): Unit = {
     Await.result(db.run(items.filter(_.id === itemId).map(en => (en.bytes, en.width, en.height)).update(bytes, width, height)), dt)
     logger.info(s"Updated image for item with ID: ${itemId}")
@@ -54,12 +60,27 @@ trait ItemHandler {
     Await.result(db.run(liveItems.filter(en => en.soldat.isEmpty || includeSold).result), dt)
   }
 
-  def lookupByInstaId(instaId : Long) : Option[Item] = {
+  def loadItems(itemIds : Seq[Long]) : Seq[Item] = {
+    val query = (itemIds.grouped(500).map {
+      case (grp) => liveItems.filter(en => en.id.inSetBind(grp))
+    }).reduce(_ union _)
+    Await.result(db.run(query.result), dt)
+  }
+
+  def lookupByInstaId(instaId : String) : Option[Item] = {
     Await.result(db.run(items.filter(_.instagramId === instaId).result), dt).headOption
   }
 
   def loadItemImage(itemId : Long) : Option[Array[Byte]] = {
     Await.result(db.run(items.filter(_.id === itemId).map(_.bytes).result), dt).headOption
+  }
+
+  def deleteItem(itemId : Long) : Unit = {
+    Await.result(db.run(items.filter(en => en.soldvalue.isEmpty && en.id === itemId).map(_.deletedAt).update(Some(new Timestamp(System.currentTimeMillis())))), dt)
+  }
+
+  def distinctInstagramIds : Set[String] = {
+    Await.result(db.run(liveItems.filter(_.instagramId.isDefined).map(_.instagramId.get).result), dt).toSet
   }
 
 

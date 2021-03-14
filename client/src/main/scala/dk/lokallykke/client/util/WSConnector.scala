@@ -30,7 +30,6 @@ trait WSConnector {
   def onJson : Option[Json => Unit] = None
 
   def ! (message : String) = {
-    println(s"Sending message: $message")
     ws.foreach(_.send(message))
   }
 

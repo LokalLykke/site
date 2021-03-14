@@ -4,7 +4,7 @@ import java.sql.Timestamp
 
 case class ViewItem(
                      itemId : Long,
-                     instaId : Option[Long],
+                     instaId : Option[String],
                      name : Option[String],
                      caption : Option[String],
                      registered : Long,

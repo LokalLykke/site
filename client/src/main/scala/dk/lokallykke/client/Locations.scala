@@ -10,6 +10,7 @@ object Locations {
     val prefix = "/items"
     def itemImage(itemId : Long) = s"$prefix/itemimage?itemId=$itemId"
     def upload = s"$prefix/upload"
+    def uploadInstagramItem = s"$prefix/upload-instagram-item"
   }
 
 

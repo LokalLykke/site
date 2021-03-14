@@ -3,10 +3,11 @@ package lokallykke.instagram
 import java.sql.Timestamp
 
 case class InstagramItem(
-                        id : Long,
+                        id : String,
                         bytes : Array[Byte],
                         width : Int,
                         height : Int,
                         caption : Option[String],
-                        timestamp: Timestamp
+                        timestamp: Timestamp,
+                        filetype : String
                         )

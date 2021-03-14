@@ -1,5 +1,5 @@
 import lokallykke.db.Connection
-import lokallykke.instagram.InstagramLoader
+import lokallykke.instagram.{InstagramLoader, LoaderObserver}
 import lokallykke.model.items.Item
 
 import java.sql.Timestamp
@@ -11,7 +11,7 @@ object ExploreItemHandling {
 
   def main(args: Array[String]): Unit = {
     val handler = Connection.h2handler
-    val instaItems = InstagramLoader.parseResponse
+    val instaItems = InstagramLoader.parseResponse(LoaderObserver.Sink)
     instaItems.foreach(it => println(it))
 
     val converted = instaItems map {

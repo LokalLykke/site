@@ -32,7 +32,7 @@ object Connection {
     override val db = Database.forDataSource(ds, Some(5)).asInstanceOf[slick.jdbc.JdbcBackend.Database]
     override val profile = slick.jdbc.H2Profile
 
-    override def existingInstagramIds(seq: Seq[Item]): Set[Long] = {
+    override def existingInstagramIds(seq: Seq[Item]): Set[String] = {
       val instaIds = seq.map(_.instagramId).collect({case Some(id) => id})
       (instaIds.grouped(900).map {
         case grp => Await.result(db.run(items.filter(_.instagramId.inSetBind(grp)).map(_.instagramId).result), dt)
