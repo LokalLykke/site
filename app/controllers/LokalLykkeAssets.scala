@@ -2,6 +2,7 @@ package controllers
 
 import java.io.File
 import akka.http.scaladsl.model.HttpHeader.ParsingResult.Ok
+import dk.lokallykke.client.util.Selector
 import lokallykke.db.Connection
 
 import javax.inject.{Inject, Singleton}
@@ -28,7 +29,6 @@ class LokalLykkeAssets @Inject() (val assets : controllers.Assets, cc : Controll
       }
     }
   }
-
 
 
 

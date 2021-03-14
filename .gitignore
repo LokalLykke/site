@@ -25,3 +25,4 @@ info.txt
 /shared/jvm/target/
 /client/target/
 /RUNNING_PID
+/node_modules/

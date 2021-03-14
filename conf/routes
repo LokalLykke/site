@@ -11,3 +11,4 @@ GET     /accounting                             controllers.AccountingController
 GET     /assets/jslibrary.js                    controllers.LokalLykkeAssets.jsLibrary()
 GET     /assets/client-fastopt-bundle.js.map    controllers.LokalLykkeAssets.jsLibraryMap()
 GET     /assets/*file                           controllers.LokalLykkeAssets.at(file)
+

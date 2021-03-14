@@ -47,15 +47,24 @@ lazy val client = (project in file("client"))
       "io.github.cquiroz" %%% "locales-minimal-en-db" % "1.1.1",
       "io.github.cquiroz" %%% "scala-java-time" % "2.2.0"
     ),
-    npmDependencies in Compile ++= Seq("jquery" -> "3.6.0", "bootstrap" -> "4.6.0", "@types/selectize" -> "0.12.34"),
+    npmDependencies in Compile ++= Seq(
+      "webpack-merge" -> "5.7.3",
+      "style-loader" -> "2.0.0",
+      "jquery" -> "3.6.0",
+      "bootstrap" -> "4.6.0",
+      "@types/selectize" -> "0.12.34",
+      "selectize" -> "0.12.06"
+    ),
+    stIgnore := List("jquery", "bootstrap","webpack-merge","style-loader"),
     sourceGenerators in Compile += Def.task {
       val _ = (npmInstallDependencies in Compile).value
       Seq.empty[File]
     },
     webpackBundlingMode := BundlingMode.LibraryAndApplication(),
+    webpackConfigFile := Some(baseDirectory.value / "../conf/lokallykke.webpack.config.js"),
     scalaJSLinkerConfig ~= { _.withModuleKind(ModuleKind.CommonJSModule)}
   )
-  .enablePlugins(ScalaJSPlugin, ScalaJSWeb, ScalaJSBundlerPlugin)
+  .enablePlugins(ScalaJSPlugin, ScalaJSWeb, ScalaJSBundlerPlugin, ScalablyTypedConverterPlugin)
 
 
 lazy val commonSettings = Seq(

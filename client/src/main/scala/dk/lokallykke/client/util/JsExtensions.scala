@@ -7,6 +7,7 @@ import java.util.{Locale, TimeZone}
 import java.time._
 import java.time.format._
 import java.time.temporal.{ChronoField, TemporalField}
+import scala.scalajs.js
 import scala.scalajs.js.Date
 import scala.util.Try
 
@@ -76,6 +77,14 @@ object JsExtensions {
 
   }
 
+  implicit class ArrayExtensions[A](arr : scala.Array[A]) {
+    def toJsArray : js.Array[A] = {
+      val ret = new js.Array[A]()
+      arr.foreach(en => ret.push(en))
+      ret
+    }
+  }
+
 
 
   object DoubleExtensions {
@@ -111,8 +120,8 @@ object JsExtensions {
   object DateTimeExtensions {
     val dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")
     val inputDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
-
   }
+
 
 
 

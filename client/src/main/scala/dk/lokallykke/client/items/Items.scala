@@ -7,7 +7,7 @@ import dk.lokallykke.client.Messages.Items.ToServer.ToServerMessage
 import dk.lokallykke.client.viewmodel.items.ViewItem
 import org.querki.jquery.{$, ElementDesc, EventHandler, JQueryAjaxSettings, JQueryEventObject, JQueryXHR}
 import dk.lokallykke.client.util.JsExtensions._
-import dk.lokallykke.client.util.{CommonUtil, Modal, WSConnector}
+import dk.lokallykke.client.util.{CommonUtil, Modal, Selector, WSConnector}
 import dk.lokallykke.client.util.tables.{Column, TableBuilder}
 import io.circe.generic.semiauto.deriveDecoder
 import io.circe.{Decoder, Json, JsonObject}
@@ -250,6 +250,7 @@ object Items {
     clearContent()
     val table = Tables.ItemTable.tableBuilder.buildTable(items)
     $(s"#$ItemsContentId").append(table)
+    val selector = Selector("test-selector", $(s"#$ItemsContentId") , options = List("elfenben", "slagelse", "ldap"), selected = List("ldap", "sune"))
   }
 
   def insertFileUpload() : Unit = {
