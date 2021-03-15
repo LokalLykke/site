@@ -67,7 +67,8 @@ object Items {
           Modal.EditableString("item-name", "Navn", item.name),
           Modal.EditableString("item-caption", "Beskrivelse", item.caption),
           Modal.EditableDouble("item-costval", "Købsværdi", item.costValue),
-          Modal.EditableDouble("item-askprice", "Til salg for", item.askPrice)
+          Modal.EditableDouble("item-askprice", "Til salg for", item.askPrice),
+          Modal.SelectableOptions("item-test-tags", "Mærkater", List("sune", "slagelse", "vakkelvorn"), Some(Seq("sune", "rugbrød")))
         )
         Modal("item-modal", "Redigér genstand", modalContents, Some((ret) => {
           var updated = item
@@ -250,7 +251,6 @@ object Items {
     clearContent()
     val table = Tables.ItemTable.tableBuilder.buildTable(items)
     $(s"#$ItemsContentId").append(table)
-    val selector = Selector("test-selector", $(s"#$ItemsContentId") , options = List("elfenben", "slagelse", "ldap"), selected = List("ldap", "sune"))
   }
 
   def insertFileUpload() : Unit = {

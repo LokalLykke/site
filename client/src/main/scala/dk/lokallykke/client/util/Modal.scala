@@ -26,6 +26,7 @@ object Modal {
         valRes.foreach(vr => resolvers += vr)
       }
     }
+    fields.collect {case opt : SelectableOptions => Selector.initialize(s"#${opt.id}", opt.options, opt.selected ) }
 
     val saveButton = $(s"<button id='$id-save-button' type='button' class='btn btn-primary'>").text(saveText)
     $(saveButton).click((ev : JQueryEventObject) => {
@@ -119,6 +120,32 @@ object Modal {
         val valRes = Some((id, () => retVal))
         (input, valRes)
       }
+      case SelectableOptions(id, key, options, selected) => {
+        val selSet = selected.toSeq.flatten.toSet
+        val optSet = options.toSet
+        val allOpts = options ++ selected.toSeq.flatten.filter(s => !optSet(s))
+        val selElem = $(s"<input id='$id'>")
+        /*allOpts.foreach {
+          case o => $(s"<option value='$o' ${if(selSet(o)) "selected" else ""}>").text(o)
+        }*/
+        val input = $("<div class='my-2'>").append(
+          $(s"<label for='$id' class='form-label'>").text(key),
+          selElem
+        )
+        var retVal : Option[Seq[String]] = selected
+        import Selector._
+        $(input).change((ev : JQueryEventObject) => {
+          $(s"#$id").value() match {
+            case null => println(s"selectize element ($id) value was null")
+            case str if str.isInstanceOf[String] => retVal = if(str.asInstanceOf[String].length > 0) Some(str.asInstanceOf[String].split(";").toSeq) else None
+            case arr if arr.isInstanceOf[Array[_]] => retVal = Some(arr.asInstanceOf[Array[String]].toSeq)
+            case jsArr if jsArr.isInstanceOf[js.Array[_]] => Some(jsArr.asInstanceOf[js.Array[String]].toSeq)
+            case othr => println(s"Got back ${othr} of class: ${othr.getClass} as selectize element ($id) value")
+          }
+        })
+        val valRes = Some(id, () => retVal)
+        (input, valRes)
+      }
 
       case _ => ($(""),None.asInstanceOf[Option[(String, () => Option[Any])]])
     }
@@ -145,6 +172,7 @@ object Modal {
   case class DisplayParagraph(id : String, text : String) extends ModalField
   case class Image(id : String, url : String) extends ModalField
   case class EmbeddedImage(dataString : String) extends ModalField
+  case class SelectableOptions(id : String, key : String, options : Seq[String], selected : Option[Seq[String]]) extends ModalField
 
 
 

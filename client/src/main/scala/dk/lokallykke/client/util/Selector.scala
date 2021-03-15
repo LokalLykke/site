@@ -44,6 +44,21 @@ object Selector {
     ret
   }
 
+  def initialize(jqString : String, options : Seq[String] = Nil, selected : Option[Seq[String]] = None) : Unit = {
+    val opts = IOptions[String, String]
+      .setCreate(true)
+      .setDelimiter(";")
+      .setOptions(options.toArray.toJsArray)
+    val withSelected = selected match {
+      case Some(sels) => opts.setItems(sels.toArray.toJsArray)
+      case _ => opts
+    }
+    println(s"Initializing by query string: $jqString finding: ${$(jqString)}")
+
+    $(jqString).selectize(withSelected)
+
+  }
+
 
 
 
