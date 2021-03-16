@@ -1,6 +1,6 @@
 package lokallykke.db
 
-import lokallykke.model.items.Item
+import lokallykke.model.items.{Item, ItemTag}
 import org.slf4j.LoggerFactory
 import slick.jdbc.JdbcProfile
 
@@ -24,8 +24,9 @@ trait Tables {
   object Items {
 
     lazy val items = TableQuery[ItemTable]
+    lazy val tags = TableQuery[ItemTagTable]
 
-    lazy val schema = items.schema
+    lazy val schema = items.schema ++ tags.schema
 
     class ItemTable(tag : Tag) extends Table[Item](tag, "ITEMS") {
       def id = column[Long]("ITEMID", O.PrimaryKey, O.AutoInc)
@@ -44,9 +45,15 @@ trait Tables {
       def * = (id, instagramId, name, bytes, width, height, caption, registered, costvalue, soldat, soldvalue, deletedAt, askprice).<> (Item.tupled, Item.unapply)
 
       def indxInsta = index("IDX_ITEM_INSID", (instagramId), false)
+    }
 
+    class ItemTagTable(tag : Tag) extends Table[ItemTag](tag, "TAGS"){
+      def itemid = column[Long]("ITEMID")
+      def tagname = column[String]("TAG")
+      def * =(itemid, tagname) <> (ItemTag.tupled, ItemTag.unapply)
 
-
+      def pk = primaryKey("PK_TAGS", (itemid, tagname))
+      def fkItem = foreignKey("FK_TAGS_ITEMID", (itemid), items)(_.id, onDelete = ForeignKeyAction.Cascade)
     }
 
   }

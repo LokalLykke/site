@@ -85,6 +85,12 @@ object JsExtensions {
     }
   }
 
+  implicit class SeqExtensions[A](seq : scala.Seq[A]) {
+    def toJsArray : js.Array[A] = {
+      js.Array(seq : _*)
+    }
+  }
+
 
 
   object DoubleExtensions {

@@ -68,7 +68,7 @@ object Items {
           Modal.EditableString("item-caption", "Beskrivelse", item.caption),
           Modal.EditableDouble("item-costval", "Købsværdi", item.costValue),
           Modal.EditableDouble("item-askprice", "Til salg for", item.askPrice),
-          Modal.SelectableOptions("item-test-tags", "Mærkater", List("sune", "slagelse", "vakkelvorn"), Some(Seq("sune", "rugbrød")))
+          Modal.SelectableOptions("item-test-tags", "Mærkater", List("sune", "slagelse", "vakkelvorn"), Some(Seq("sune")))
         )
         Modal("item-modal", "Redigér genstand", modalContents, Some((ret) => {
           var updated = item

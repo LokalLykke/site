@@ -19,14 +19,13 @@ object Modal {
   def apply(id : String, title : String, fields : Seq[ModalField], onSave : Option[(Map[String, ValueResolver]) => Unit] = None, saveText : String = "Gem", cancelText : String = "Annuller") : Unit = {
     val body = $("<div class='modal-body'>")
     val resolvers = scala.collection.mutable.ArrayBuffer.empty[(String, () => Option[Any])]
-    val contents = fields.map(bodyContentFromField)
+    val contents = fields.filter(en => if(en.isInstanceOf[SelectableOptions]) false else true).map(bodyContentFromField)
     contents.foreach{
       case (cont, valRes) => {
         $(body).append(cont)
         valRes.foreach(vr => resolvers += vr)
       }
     }
-    fields.collect {case opt : SelectableOptions => Selector.initialize(s"#${opt.id}", opt.options, opt.selected ) }
 
     val saveButton = $(s"<button id='$id-save-button' type='button' class='btn btn-primary'>").text(saveText)
     $(saveButton).click((ev : JQueryEventObject) => {
@@ -56,6 +55,12 @@ object Modal {
       )
     )
     displayModal(modal)
+    fields.collect {
+      case selOpt : SelectableOptions => {
+        val selRes = insertSelector(body, selOpt)
+        selRes._2.foreach(vr => resolvers += vr)
+      }
+    }
   }
 
   def bodyContentFromField(field : ModalField) : (JQuery, Option[(String, () => Option[Any])]) = {
@@ -120,36 +125,34 @@ object Modal {
         val valRes = Some((id, () => retVal))
         (input, valRes)
       }
-      case SelectableOptions(id, key, options, selected) => {
-        val selSet = selected.toSeq.flatten.toSet
-        val optSet = options.toSet
-        val allOpts = options ++ selected.toSeq.flatten.filter(s => !optSet(s))
-        val selElem = $(s"<input id='$id'>")
-        /*allOpts.foreach {
-          case o => $(s"<option value='$o' ${if(selSet(o)) "selected" else ""}>").text(o)
-        }*/
-        val input = $("<div class='my-2'>").append(
-          $(s"<label for='$id' class='form-label'>").text(key),
-          selElem
-        )
-        var retVal : Option[Seq[String]] = selected
-        import Selector._
-        $(input).change((ev : JQueryEventObject) => {
-          $(s"#$id").value() match {
-            case null => println(s"selectize element ($id) value was null")
-            case str if str.isInstanceOf[String] => retVal = if(str.asInstanceOf[String].length > 0) Some(str.asInstanceOf[String].split(";").toSeq) else None
-            case arr if arr.isInstanceOf[Array[_]] => retVal = Some(arr.asInstanceOf[Array[String]].toSeq)
-            case jsArr if jsArr.isInstanceOf[js.Array[_]] => Some(jsArr.asInstanceOf[js.Array[String]].toSeq)
-            case othr => println(s"Got back ${othr} of class: ${othr.getClass} as selectize element ($id) value")
-          }
-        })
-        val valRes = Some(id, () => retVal)
-        (input, valRes)
-      }
-
       case _ => ($(""),None.asInstanceOf[Option[(String, () => Option[Any])]])
     }
     ret
+  }
+
+  def insertSelector(body : JQuery, selOpt : SelectableOptions) = {
+    val selSet = selOpt.selected.toSeq.flatten.toSet
+    val optSet = selOpt.options.toSet
+    val allOpts = selOpt.options ++ selOpt.selected.toSeq.flatten.filter(s => !optSet(s))
+    val input = $("<div class='my-2'>").append(
+      $(s"<label for='${selOpt.id}' class='form-label'>").text(selOpt.key)
+    )
+    $(body).append(input)
+    val select = Selector(selOpt.id, body, allOpts, selOpt.selected.toList.flatten)
+    var retVal : Option[Seq[String]] = selOpt.selected
+    import Selector._
+    $(select).change((ev : JQueryEventObject) => {
+      $(s"#${selOpt.id}").value() match {
+        case null => println(s"selectize element (${selOpt.id}) value was null")
+        case str if str.isInstanceOf[String] => {
+          retVal = if(str.asInstanceOf[String].length > 0) Some(str.asInstanceOf[String].split(";").toSeq) else None
+        }
+        case othr => println(s"Got back ${othr} of class: ${othr.getClass} as selectize element (${selOpt.id}) value")
+      }
+    })
+    val valRes = Some(selOpt.id, () => retVal)
+    (input, valRes)
+
   }
 
   def displayModal(modal : JQuery)  = {

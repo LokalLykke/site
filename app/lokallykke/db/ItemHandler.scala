@@ -1,6 +1,6 @@
 package lokallykke.db
 
-import lokallykke.model.items.Item
+import lokallykke.model.items.{Item, ItemTag}
 import org.slf4j.LoggerFactory
 import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.JdbcProfile
@@ -12,20 +12,22 @@ import lokallykke.helpers.Extensions._
 import java.sql.{Time, Timestamp}
 
 trait ItemHandler {
+  val db : Database
+  val profile : JdbcProfile
+  import profile.api._
+
   private val logger = LoggerFactory.getLogger(this.getClass)
 
   val tables : Tables
   lazy val items = tables.Items.items
-  val db : Database
-  val profile : JdbcProfile
-  import profile.api._
+  lazy val tags = tables.Items.tags
+  lazy val liveItems = items.filter(_.deletedAt.isEmpty)
   private implicit val dt = 30.seconds
 
   def existingInstagramIds(seq : Seq[Item]) : Set[String]
 
   private lazy val insertAndReturnItem = items.returning(items.map(_.id)).into((it, id) => it.copy(id = id))
 
-  lazy val liveItems = items.filter(_.deletedAt.isEmpty)
 
   def insertItems(items : Seq[Item]) : Seq[Item] = {
     val existInstaIds = existingInstagramIds(items)
@@ -81,6 +83,17 @@ trait ItemHandler {
 
   def distinctInstagramIds : Set[String] = {
     Await.result(db.run(liveItems.filter(_.instagramId.isDefined).map(_.instagramId.get).result), dt).toSet
+  }
+
+  def loadTagsFor(itemids : Seq[Long]) : Seq[ItemTag] = {
+    val query = itemids.grouped(500).map(grp => tags.filter(t => t.itemid.inSetBind(grp))).reduce(_ union _)
+    Await.result(db.run(query.result), dt)
+  }
+
+  def updateTagsFor(itemId : Long, tagnames : Seq[String]) = {
+    Await.result(db.run(tags.filter(_.itemid === itemId).delete),dt)
+    val insertees = tagnames.map(t => ItemTag(itemId, t))
+    Await.result(db.run(tags ++= insertees), dt)
   }
 
 

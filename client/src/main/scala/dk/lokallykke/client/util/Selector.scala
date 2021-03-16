@@ -1,11 +1,13 @@
 package dk.lokallykke.client.util
 
 import org.querki.jquery.{$, JQuery}
-import typings.selectize.Selectize.IOptions
+import typings.selectize.Selectize.{IApi, IOptions}
 
 import scala.scalajs.js
 import scala.scalajs.js.annotation.JSImport
 import dk.lokallykke.client.util.JsExtensions._
+import org.scalablytyped.runtime.StringDictionary
+import typings.selectize.{HTMLElement, Selectize}
 
 // Documentation: https://github.com/selectize/selectize.js/blob/master/docs/api.md
 object Selector {
@@ -28,18 +30,23 @@ object Selector {
   import typings.selectize.{JQuery => SelectizeJQuery}
 
   implicit def jQuerySelectizeExtender(jq : JQuery) : SelectizeJQuery = jq.asInstanceOf[SelectizeJQuery]
+  //implicit def jQuerySelectizaApi(jq : JQuery) : IApi[String, String] = jq.asInstanceOf[IApi[String, String]]
 
   val selectizeCss = Css
 
   def apply(id : String, appendTo : JQuery, options : Seq[String] = Nil, selected : Seq[String] = Nil) = {
-    $(appendTo).append(
-      $(s"<input id='$id'>")
-    )
-    val opts = IOptions[String, String]
-      .setItems(selected.toArray.toJsArray)
-      .setOptions(options.toArray.toJsArray)
+    val input = $(s"<input id='$id'>")
+    $(appendTo).append($(input))
+    selected.foreach(sel => println(sel))
+
+    val opts = IOptions[String, js.Object with js.Dynamic]
       .setCreate(true)
+      .setValueField("id")
+      .setLabelField("name")
       .setDelimiter(";")
+      .setOptions(options.map(opt => js.Dynamic.literal(id = opt, name = opt)).toJsArray)
+      .setItems(selected.toJsArray)
+
     val ret = $(s"#$id").selectize(opts)
     ret
   }
