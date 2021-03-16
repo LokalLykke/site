@@ -39,6 +39,7 @@ object Items {
 
   var uploadedFiles = Seq.empty[UploadedFile]
   var instagramItems = Seq.empty[InstagramItem]
+  var availableTags : Seq[String] = Nil
 
 
   object Tables {
@@ -51,12 +52,14 @@ object Items {
       val registeredCol = DateTimeColumn[ViewItem]("registered", "Registreret", en => Some(en.registered.toDateTime))
       val costValueCol = DoubleColumn[ViewItem]("costvalue", "Købsværdi", en => en.costValue )
       val askPriceCol = DoubleColumn[ViewItem]("askprice", "Til salg for", en => en.askPrice)
-      val deleteCol = ButtonColumn[ViewItem]("delete", "Slet", "Slet", Some((obj : JQueryEventObject, en : ViewItem) =>  {
+      val deleteCol = ButtonColumn[ViewItem]("delete", "Slet", "Slet" ,Some((obj : JQueryEventObject, en : ViewItem) =>  {
         Modal.Accept("Vil du virkeligt slette?", s"Er du sikker på at du vil slette: ${en.name.getOrElse(s"genstand med ID: ${en.itemId}")}",() => {
           ItemsConnector.send(ToServer.ToServerMessage(ToServer.DeleteItemAndLoad, itemId = Some(en.itemId)))
         })
-      }), inClasses = Some((a : ViewItem) => "btn btn-danger"))
-      val columns = Seq(imageCol, nameCol, captionCol, registeredCol, costValueCol, askPriceCol, deleteCol)
+      }), inClasses = Some((a : ViewItem) => "btn btn-danger btn-sm"))
+      val tagsCol = StringColumn[ViewItem]("tags", "Mærkater",en => Some(en.tags.map(str => s"#$str").mkString(" ")))
+
+      val columns = Seq(imageCol, nameCol, captionCol, registeredCol, costValueCol, askPriceCol, deleteCol, tagsCol)
 
       def rowHandlerFor(item : ViewItem) : Option[EventHandler] =  Some(((obj : JQueryEventObject) => {
         import dk.lokallykke.client.util.Modal
@@ -68,7 +71,7 @@ object Items {
           Modal.EditableString("item-caption", "Beskrivelse", item.caption),
           Modal.EditableDouble("item-costval", "Købsværdi", item.costValue),
           Modal.EditableDouble("item-askprice", "Til salg for", item.askPrice),
-          Modal.SelectableOptions("item-test-tags", "Mærkater", List("sune", "slagelse", "vakkelvorn"), Some(Seq("sune")))
+          Modal.SelectableOptions("item-tags", "Mærkater", availableTags, Some(item.tags))
         )
         Modal("item-modal", "Redigér genstand", modalContents, Some((ret) => {
           var updated = item
@@ -77,6 +80,7 @@ object Items {
             case ("item-caption", n : Option[String]) => updated = updated.copy(caption = n)
             case ("item-costval", d : Option[Double]) => updated = updated.copy(costValue = d)
             case ("item-askprice", d : Option[Double]) => updated = updated.copy(askPrice = d)
+            case ("item-tags", arr : Option[Seq[String]]) => updated = updated.copy(tags = arr.getOrElse(Nil))
             case (itId,v) => {
               println(s"Found no way to update field: ${itId} with value: $v")
             }
@@ -99,8 +103,9 @@ object Items {
         show()
         ItemsConnector.send(ToServer.ToServerMessage(ToServer.DeleteItem, itemId = Some(en.itemid)))
       }), inClasses = Some((a : UploadedFile) => "btn btn-danger btn-sm"))
+      val tagsCol = StringColumn[UploadedFile]("tags", "Mærkater",en => Some(en.viewItem.tags.map(str => s"#$str").mkString(" ")))
 
-      val columns = Seq(imageCol, fileNameCol, nameCol, captionCol, costValueCol, askPriceCol, deleteCol)
+      val columns = Seq(imageCol, fileNameCol, nameCol, captionCol, costValueCol, askPriceCol, deleteCol, tagsCol)
 
       def rowHandlerFor(item : UploadedFile) : Option[EventHandler] =  Some(((obj : JQueryEventObject) => {
         import dk.lokallykke.client.util.Modal
@@ -111,7 +116,8 @@ object Items {
           Modal.EditableString("item-name", "Navn", item.viewItem.name),
           Modal.EditableString("item-caption", "Beskrivelse", item.viewItem.name),
           Modal.EditableDouble("item-costval", "Købsværdi", item.viewItem.costValue),
-          Modal.EditableDouble("item-askprice", "Til salg for", item.viewItem.askPrice)
+          Modal.EditableDouble("item-askprice", "Til salg for", item.viewItem.askPrice),
+          Modal.SelectableOptions("item-tags", "Mærkater", availableTags, Some(item.viewItem.tags))
         )
         Modal("item-modal", "Redigér genstand", modalContents, Some((ret) => {
           var updated = item.viewItem
@@ -120,6 +126,7 @@ object Items {
             case ("item-caption", n : Option[String]) => updated = updated.copy(caption = n)
             case ("item-costval", d : Option[Double]) => updated = updated.copy(costValue = d)
             case ("item-askprice", d : Option[Double]) => updated = updated.copy(askPrice = d)
+            case ("item-tags", arr : Option[Seq[String]]) => updated = updated.copy(tags = arr.getOrElse(Nil))
             case (itId,v) => {
               println(s"Found no way to update field: ${itId} with value: $v")
             }
@@ -147,10 +154,12 @@ object Items {
       val costValueCol = DoubleColumn[InstagramItem]("costvalue", "Købsværdi", en => en.costValue )
       val askPriceCol = DoubleColumn[InstagramItem]("askprice", "Til salg for", en => en.askPrice )
       val importCol = ButtonColumn[InstagramItem]("create-item", "Importér", "Importér", Some((obj : JQueryEventObject, en : InstagramItem)  => {
-        val toSend = ToServer.ToServerMessage(ToServer.CreateInstagramItem, instagramItem = Some(ToServer.InstagramItem(en.instagramId , en.name, en.captionToUse, en.costValue, en.askPrice)))
+        val toSend = ToServer.ToServerMessage(ToServer.CreateInstagramItem, instagramItem = Some(ToServer.InstagramItem(en.instagramId , en.name, en.captionToUse, en.costValue, en.askPrice, en.tags)))
         ItemsConnector.send(toSend)
 
       }), inClasses = Some((a : InstagramItem) => "btn btn-secondary btn-sm"))
+      val tagsCol = StringColumn[InstagramItem]("tags", "Mærkater",en => Some(en.tags.map(str => s"#$str").mkString(" ")))
+
 
       val columns = Seq(imageCol, fileNameCol, nameCol, costValueCol, askPriceCol, importCol)
 
@@ -163,7 +172,8 @@ object Items {
           Modal.EditableString("instagram-name", "Navn", item.name),
           Modal.EditableString("instagram-caption", "Beskrivelse", item.captionToUse),
           Modal.EditableDouble("instagram-costval", "Købsværdi", item.costValue),
-          Modal.EditableDouble("instagram-askprice", "Til salg for", item.costValue)
+          Modal.EditableDouble("instagram-askprice", "Til salg for", item.costValue),
+          Modal.SelectableOptions("instagram-tags", "Mærkater", availableTags, Some(item.tags))
         )
         Modal("instagram-modal", "Redigér genstand", modalContents, Some((ret) => {
           var updated = item
@@ -172,6 +182,8 @@ object Items {
             case ("instagram-caption", n : Option[String]) => updated = updated.copy(caption = n)
             case ("instagram-costval", d : Option[Double]) => updated = updated.copy(costValue = d)
             case ("instagram-askprice", d : Option[Double]) => updated = updated.copy(askPrice = d)
+            case ("instagram-tags", arr : Option[Seq[String]]) => updated = updated.copy(tags = arr.getOrElse(Nil))
+
             case (itId,v) => {
               println(s"Found no way to update field: ${itId} with value: $v")
             }
@@ -201,6 +213,11 @@ object Items {
     $(ItemsNavQuery).foreach((el : Element) => {
       $(el).click((obj : JQueryEventObject) => updateItemsNavSelection($(el).attr("id").toString))
     })
+  }
+
+  @JSExport
+  def setTagOptions(str : String) : Unit = {
+    availableTags = str.split(";")
   }
 
   @JSExport
@@ -344,7 +361,7 @@ object Items {
   }
 
   case class UploadedFile(itemid : Long, fileName : Option[String], viewItem : ViewItem)
-  case class InstagramItem(instagramId : String, name : Option[String], caption : Option[String], costValue : Option[Double], askPrice : Option[Double], instagramResult : ToClient.InstagramResult) {
+  case class InstagramItem(instagramId : String, name : Option[String], caption : Option[String], costValue : Option[Double], askPrice : Option[Double], instagramResult : ToClient.InstagramResult, tags : Seq[String]) {
     def captionToUse = caption.orElse(instagramResult.caption)
   }
 
@@ -379,7 +396,7 @@ object Items {
           mess.instagramUpdate.foreach(status => updateWithInstagramStatus(status))
           mess.instagramResults.foreach {
             case res => {
-              instagramItems = res.map(en => InstagramItem(en.instagramId, None, en.caption, None, None, en))
+              instagramItems = res.map(en => InstagramItem(en.instagramId, None, en.caption, None, None, en, en.tags))
               Tables.InstagramTable.show()
             }
           }
@@ -387,6 +404,11 @@ object Items {
             case id => {
               instagramItems = instagramItems.filter(_.instagramId != id)
               Tables.InstagramTable.show()
+            }
+          }
+          mess.tagOptions.foreach {
+            case opts => {
+              availableTags = opts
             }
           }
         }

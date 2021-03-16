@@ -37,7 +37,6 @@ object Selector {
   def apply(id : String, appendTo : JQuery, options : Seq[String] = Nil, selected : Seq[String] = Nil) = {
     val input = $(s"<input id='$id'>")
     $(appendTo).append($(input))
-    selected.foreach(sel => println(sel))
 
     val opts = IOptions[String, js.Object with js.Dynamic]
       .setCreate(true)
@@ -60,8 +59,6 @@ object Selector {
       case Some(sels) => opts.setItems(sels.toArray.toJsArray)
       case _ => opts
     }
-    println(s"Initializing by query string: $jqString finding: ${$(jqString)}")
-
     $(jqString).selectize(withSelected)
 
   }

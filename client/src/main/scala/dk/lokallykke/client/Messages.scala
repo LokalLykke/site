@@ -35,16 +35,16 @@ object Messages {
       val LoadInstagramItems = "LoadInstagramItems"
       val CreateInstagramItem = "CreateInstagramItem"
 
-      case class InstagramItem(instagramId : String, name : Option[String], caption : Option[String], costValue : Option[Double], askPrice : Option[Double])
+      case class InstagramItem(instagramId : String, name : Option[String], caption : Option[String], costValue : Option[Double], askPrice : Option[Double], tags : Seq[String])
 
     }
 
     object ToClient {
       case class ToClientMessage(items : Option[Seq[ViewItem]] = None, uploadResult : Option[Seq[FileUploadResult]] = None, instagramUpdate : Option[String] = None,
-                                 instagramResults: Option[Seq[InstagramResult]] = None, uploadedInstagramItem : Option[String] = None)
+                                 instagramResults: Option[Seq[InstagramResult]] = None, uploadedInstagramItem : Option[String] = None, tagOptions : Option[Seq[String]] = None)
 
       case class FileUploadResult(id : Long, fileName : Option[String], success : Boolean)
-      case class InstagramResult(instagramId : String, caption : Option[String], bytes : Array[Byte], fileType : String)
+      case class InstagramResult(instagramId : String, caption : Option[String], bytes : Array[Byte], fileType : String, tags : Seq[String])
 
 
 

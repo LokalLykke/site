@@ -28,7 +28,9 @@ class ItemsController  @Inject()(cc : ControllerComponents, site : Site)(implici
   def index = actionFrom {
     case request : Request[AnyContent] => {
       val items = ItemsController.loadItems(handler, false)
-      Ok(views.html.items(items))
+      val options = site.itemHandler.loadDistinctTags
+
+      Ok(views.html.items(items, options.mkString(";")))
     }
 
   }
@@ -57,7 +59,8 @@ class ItemsController  @Inject()(cc : ControllerComponents, site : Site)(implici
 
     def sendItems = {
       val items = ItemsController.loadItems(site.itemHandler, false)
-      out ! Json.toJson(ToClient.ToClientMessage(Some(items)))
+      val options = site.itemHandler.loadDistinctTags
+      out ! Json.toJson(ToClient.ToClientMessage(Some(items), tagOptions = Some(options)))
     }
 
 
@@ -79,6 +82,7 @@ class ItemsController  @Inject()(cc : ControllerComponents, site : Site)(implici
             message.viewItem.foreach {
               case it => {
                 site.itemHandler.updateItem(it.itemId, it.name, it.caption, it.costValue, it.askPrice)
+                site.itemHandler.updateTagsFor(it.itemId, it.tags)
                 sendItems
               }
             }
@@ -87,14 +91,16 @@ class ItemsController  @Inject()(cc : ControllerComponents, site : Site)(implici
             message.viewItem.foreach {
               case it => {
                 site.itemHandler.updateItem(it.itemId, it.name, it.caption, it.costValue, it.askPrice)
+                site.itemHandler.updateTagsFor(it.itemId, it.tags)
               }
             }
           }
           case ToServer.LoadInstagramItems => {
             val loaded = ItemsController.loadFromInstagram(out)
             val existing = site.itemHandler.distinctInstagramIds
-            val converted = loaded.filter(en => !existing(en.id)).map(en => ToClient.InstagramResult(en.id, en.caption, en.bytes, en.filetype))
-            out ! Json.toJson(ToClient.ToClientMessage(instagramResults = Some(converted)))
+            val converted = loaded.filter(en => !existing(en.id)).map(en => ToClient.InstagramResult(en.id, en.caption, en.bytes, en.filetype, en.tags))
+            val options = site.itemHandler.loadDistinctTags
+            out ! Json.toJson(ToClient.ToClientMessage(instagramResults = Some(converted), tagOptions = Some(options)))
             loaded.foreach(it => Cache.InstagramImages.cache(it.id, it.bytes))
           }
           case ToServer.CreateInstagramItem => {
@@ -117,7 +123,7 @@ class ItemsController  @Inject()(cc : ControllerComponents, site : Site)(implici
         }
       } match {
         case Success(_) =>
-        case Failure(err) => logger.error(s"During reception of messahe: $mess", err)
+        case Failure(err) => logger.error(s"During reception of message: $mess", err)
       }
     }
 
@@ -139,14 +145,17 @@ object ItemsController {
   implicit val messWrites : Writes[ToClient.ToClientMessage] = Json.writes[ToClient.ToClientMessage]
 
   def loadItems(handler : ItemHandler, includeSold : Boolean) = {
-    handler.loadItems(includeSold).map {
-      case it => ViewItem(it.id, it.instagramId, it.name, it.caption, it.registered.getTime, it.costvalue, it.askprice)
+    val items = handler.loadItems(includeSold)
+    val tags = handler.loadTagsFor(items.map(_.id)).groupBy(_.itemid).map(p => p._1 -> p._2.sortBy(_.tag).map(_.tag))
+    items.map {
+      case it => ViewItem(it.id, it.instagramId, it.name, it.caption, it.registered.getTime, it.costvalue, it.askprice, tags.getOrElse(it.id, Nil))
     }
   }
 
   def loadItems(handler : ItemHandler, itemIds : Seq[Long]) = {
+    val tags = handler.loadTagsFor(itemIds).groupBy(_.itemid).map(p => p._1 -> p._2.sortBy(_.tag).map(_.tag))
     handler.loadItems(itemIds).map {
-      case it => ViewItem(it.id, it.instagramId, it.name, it.caption, it.registered.getTime, it.costvalue, it.askprice)
+      case it => ViewItem(it.id, it.instagramId, it.name, it.caption, it.registered.getTime, it.costvalue, it.askprice, tags.getOrElse(it.id, Nil))
     }
   }
 

@@ -9,5 +9,6 @@ case class ViewItem(
                      caption : Option[String],
                      registered : Long,
                      costValue : Option[Double],
-                     askPrice : Option[Double]
+                     askPrice : Option[Double],
+                     tags : Seq[String]
                    )

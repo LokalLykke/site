@@ -9,5 +9,6 @@ case class InstagramItem(
                         height : Int,
                         caption : Option[String],
                         timestamp: Timestamp,
-                        filetype : String
+                        filetype : String,
+                        tags : Seq[String]
                         )

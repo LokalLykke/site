@@ -2,7 +2,6 @@ package lokallykke.db
 
 import lokallykke.model.items.{Item, ItemTag}
 import org.slf4j.LoggerFactory
-import slick.jdbc.JdbcBackend.Database
 import slick.jdbc.JdbcProfile
 
 import scala.concurrent.Await
@@ -12,9 +11,9 @@ import lokallykke.helpers.Extensions._
 import java.sql.{Time, Timestamp}
 
 trait ItemHandler {
-  val db : Database
   val profile : JdbcProfile
   import profile.api._
+  val db : Database
 
   private val logger = LoggerFactory.getLogger(this.getClass)
 
@@ -88,6 +87,10 @@ trait ItemHandler {
   def loadTagsFor(itemids : Seq[Long]) : Seq[ItemTag] = {
     val query = itemids.grouped(500).map(grp => tags.filter(t => t.itemid.inSetBind(grp))).reduce(_ union _)
     Await.result(db.run(query.result), dt)
+  }
+
+  def loadDistinctTags : Seq[String] = {
+    Await.result(db.run(tags.map(_.tagname).distinct.sortBy(x => x).result), dt)
   }
 
   def updateTagsFor(itemId : Long, tagnames : Seq[String]) = {

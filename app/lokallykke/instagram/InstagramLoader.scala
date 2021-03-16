@@ -59,7 +59,11 @@ object InstagramLoader {
           case (Some(jsEnt), Some(imgEnt)) => {
             parseJson(jsEnt._4) match {
               case None => None
-              case Some((id, width, height, caption, timestamp)) => Some(InstagramItem(id, imgEnt._4, width, height, caption.orElse(fileCaption), new Timestamp(timestamp * 1000L), imgEnt._2))
+              case Some((id, width, height, caption, timestamp)) => {
+                val capTags = caption.orElse(fileCaption).map(c => parseCaptionWithTags(c))
+                val (capOpt : Option[String], tags : Seq[String]) = (capTags.map(_._1), capTags.map(_._2).getOrElse(Nil))
+                Some(InstagramItem(id, imgEnt._4, width, height, capOpt, new Timestamp(timestamp * 1000L), imgEnt._2, tags))
+              }
             }
           }
         }
@@ -85,6 +89,14 @@ object InstagramLoader {
         Some((id, width, height, caption, timestamp))
       }
       case _ => None
+    }
+  }
+
+  private val tagsRegex = "#(\\w|\\-)+".r
+
+  def parseCaptionWithTags(str : String) : (String, Seq[String]) = {
+    tagsRegex.findAllIn(str).toList.foldLeft(("", Seq.empty[String])) {
+      case ((ret : String, tags : Seq[String]) ,tag : String) => (ret.replaceAll(tag,""),  tags :+ tag.replaceAll("#",""))
     }
   }
 

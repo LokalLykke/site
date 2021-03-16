@@ -1,4 +1,4 @@
-@(items : Seq[_root_.dk.lokallykke.client.viewmodel.items.ViewItem])
+@(items : Seq[_root_.dk.lokallykke.client.viewmodel.items.ViewItem], tagOptions : String)
 
 @import _root_.dk.lokallykke.client.items.Items
 @import _root_.dk.lokallykke.client.viewmodel.items.ViewItem
@@ -14,6 +14,7 @@
       Html(Json.stringify(Json.toJson(items)))
     }
     Items.updateTable(JSON.stringify(items))
+    Items.setTagOptions('@{Html(tagOptions)}')
   </script>
 }
 
