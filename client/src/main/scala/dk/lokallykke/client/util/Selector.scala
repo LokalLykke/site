@@ -50,6 +50,19 @@ object Selector {
     ret
   }
 
+  def apply(id : String, options : Seq[String], selected : Seq[String]) = {
+    val opts = IOptions[String, js.Object with js.Dynamic]
+      .setCreate(true)
+      .setValueField("id")
+      .setLabelField("name")
+      .setDelimiter(";")
+      .setOptions(options.map(opt => js.Dynamic.literal(id = opt, name = opt)).toJsArray)
+      .setItems(selected.toJsArray)
+
+    val ret = $(s"#$id").selectize(opts)
+    ret
+  }
+
   def initialize(jqString : String, options : Seq[String] = Nil, selected : Option[Seq[String]] = None) : Unit = {
     val opts = IOptions[String, String]
       .setCreate(true)

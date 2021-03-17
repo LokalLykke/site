@@ -53,7 +53,8 @@ lazy val client = (project in file("client"))
       "jquery" -> "3.6.0",
       "bootstrap" -> "4.6.0",
       "@types/selectize" -> "0.12.34",
-      "selectize" -> "0.12.06"
+      "selectize" -> "0.12.06",
+      "@editorjs/editorjs" -> "2.19.3"
     ),
     stIgnore := List("jquery", "bootstrap","webpack-merge","style-loader"),
     sourceGenerators in Compile += Def.task {

@@ -5,6 +5,10 @@ GET     /items/ws                               controllers.ItemsController.sock
 POST    /items/upload                           controllers.ItemsController.upload
 GET     /items                                  controllers.ItemsController.index()
 
+
+POST    /pages/ws                               controllers.PagesController.socket
+GET     /pages                                  controllers.PagesController.index()
+
 GET     /accounting/ws                          controllers.AccountingController.socket
 GET     /accounting                             controllers.AccountingController.index
 
