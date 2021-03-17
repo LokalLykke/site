@@ -13,6 +13,11 @@ object Locations {
     def uploadInstagramItem = s"$prefix/upload-instagram-item"
   }
 
+  object Pages {
+    val prefix = "/pages"
+    def saveImage = s"$prefix/saveimage"
+  }
+
 
 
 }

@@ -1,6 +1,7 @@
 package lokallykke.db
 
 import lokallykke.model.items.{Item, ItemTag}
+import lokallykke.model.pages.{Image, Page, PageContent, PageTag}
 import org.slf4j.LoggerFactory
 import slick.jdbc.JdbcProfile
 
@@ -14,12 +15,19 @@ trait Tables {
   val profile : JdbcProfile
   import profile.api._
 
-  def createTables(db : Database)(implicit duration: Duration) = {
+  def createItemTables(db : Database)(implicit duration: Duration) = {
     val schema = Items.schema
     logger.info(s"Will create schema based on following DML")
     schema.createIfNotExistsStatements.foreach(stat => logger.info(stat))
     Await.result(db.run(schema.createIfNotExists),duration)
   }
+  def createPageTables(db : Database)(implicit duration: Duration) = {
+    val schema = Pages.schema
+    logger.info(s"Will create schema based on following DML")
+    schema.createIfNotExistsStatements.foreach(stat => logger.info(stat))
+    Await.result(db.run(schema.createIfNotExists),duration)
+  }
+
 
   object Items {
 
@@ -54,6 +62,65 @@ trait Tables {
 
       def pk = primaryKey("PK_TAGS", (itemid, tagname))
       def fkItem = foreignKey("FK_TAGS_ITEMID", (itemid), items)(_.id, onDelete = ForeignKeyAction.Cascade)
+    }
+
+  }
+
+  object Pages {
+
+    val pages = TableQuery[PageTable]
+    val pageTags = TableQuery[PageTagTable]
+    val images = TableQuery[ImageTable]
+    val pageContent = TableQuery[PageContentTable]
+
+
+    val schema = pages.schema ++ pageTags.schema ++ images.schema ++ pageContent.schema
+
+    class PageTable(tag : Tag) extends Table[Page](tag, "PAGES"){
+      def id = column[Long]("PAGEID", O.AutoInc)
+      def name = column[String]("PAGENAME")
+      def description = column[Option[String]]("DESCRIPTION")
+      def * = (id, name, description) <> (Page.tupled, Page.unapply)
+
+      def pk = primaryKey("PK_PAGES", (id))
+    }
+
+    class PageTagTable(tag : Tag) extends Table[PageTag](tag, "PAGETAGS") {
+      def pageid = column[Long]("PAGEID")
+      def tagname = column[String]("TAGNAME")
+      def * = (pageid, tagname) <> (PageTag.tupled, PageTag.unapply)
+
+      def fkPage = foreignKey("FK_PAGETAGS_PAGE", (pageid), pages)(_.id, onDelete = ForeignKeyAction.Cascade)
+      def indxPage = index("IDX_PAGETABS_PAGE", (pageid), unique = false)
+    }
+
+    class ImageTable(tag : Tag) extends Table[Image](tag, "PAGEIMAGES") {
+      def id = column[Long]("IMAGEID", O.AutoInc)
+      def bytes = column[Array[Byte]]("IMAGEBYTES")
+      def contenttype = column[String]("CONTENTTYPE")
+      def * = (id, bytes, contenttype) <> (Image.tupled, Image.unapply)
+
+      def pk = primaryKey("PK_PAGEIMAGES", (id))
+    }
+
+    class PageContentTable(tag : Tag) extends Table[PageContent](tag, "PAGECONTENT") {
+      def id = column[Long]("CONTENTID", O.AutoInc)
+      def pageid = column[Long]("PAGEID")
+      def indx = column[Int]("INDX")
+      def contenttype = column[String]("CONTENTTYPE")
+      def parentid = column[Option[Long]]("PARENTID")
+      def text = column[Option[String]]("TEXT")
+      def style = column[Option[String]]("STYLE")
+      def level = column[Option[Int]]("LEVEL")
+      def imageid = column[Option[Long]]("IMAGEID")
+      def withborder = column[Option[Int]]("BORDER")
+      def stretched = column[Option[Int]]("STRETCHED")
+      def withbackground = column[Option[Int]]("BACKGROUND")
+      def * = (id, pageid, indx, contenttype, parentid, text, style, level, imageid, withborder, stretched, withbackground) <> (PageContent.tupled, PageContent.unapply)
+
+      def pk = primaryKey("PK_PAGECONTENT", (id))
+      def fkPage = foreignKey("FK_PAGECONTENT_PAGE", (pageid), pages)(_.id, onDelete = ForeignKeyAction.Cascade)
+
     }
 
   }

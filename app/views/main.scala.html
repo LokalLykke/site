@@ -21,13 +21,13 @@
         <div class="collapse navbar-collapse justify-content-between">
           <ul class="navbar-nav">
             <li class="nav-item mx-3">
-              <a class="nav-link @{if(caller == "items") "active" else ""}" href="#" id="main-link-items">Beholdning</a>
+              <a class="nav-link @{if(caller == "items") "active" else ""}" href="@controllers.routes.ItemsController.index" id="main-link-items">Beholdning</a>
             </li>
               <li class="nav-item mx-3">
-                  <a class="nav-link @{if(caller == "pages") "active" else ""}" href="#" id="main-link-pages">Sider</a>
+                  <a class="nav-link @{if(caller == "pages") "active" else ""}" href="@controllers.routes.PagesController.index" id="main-link-pages">Sider</a>
               </li>
             <li class="nav-item mx-3">
-              <a class="nav-link @{if(caller == "accounting") "active" else ""}" href="#" id="main-link-accounting">Regnskab</a>
+              <a class="nav-link @{if(caller == "accounting") "active" else ""}" href="@controllers.routes.AccountingController.index" id="main-link-accounting">Regnskab</a>
             </li>
           </ul>
           <div class="nav-item mx-3">

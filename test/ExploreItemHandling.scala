@@ -12,7 +12,7 @@ object ExploreItemHandling {
 
   def main(args: Array[String]): Unit = {
     val handler = Connection.h2handler
-    handler.createTables(handler.db)
+    handler.createItemTables(handler.db)
 
 
   }

@@ -54,9 +54,13 @@ lazy val client = (project in file("client"))
       "bootstrap" -> "4.6.0",
       "@types/selectize" -> "0.12.34",
       "selectize" -> "0.12.06",
-      "@editorjs/editorjs" -> "2.19.3"
+      "@editorjs/editorjs" -> "2.19.3",
+      "@editorjs/header" -> "2.6.1",
+      "@editorjs/image" -> "2.6.0",
+      "@editorjs/list" -> "1.6.2",
+      "@editorjs/embed" -> "2.4.0"
     ),
-    stIgnore := List("jquery", "bootstrap","webpack-merge","style-loader"),
+    stIgnore := List("jquery", "bootstrap","webpack-merge","style-loader","@editorjs/header","@editorjs/image","@editorjs/list","@editorjs/embed"),
     sourceGenerators in Compile += Def.task {
       val _ = (npmInstallDependencies in Compile).value
       Seq.empty[File]

@@ -5,8 +5,10 @@ GET     /items/ws                               controllers.ItemsController.sock
 POST    /items/upload                           controllers.ItemsController.upload
 GET     /items                                  controllers.ItemsController.index()
 
-
-POST    /pages/ws                               controllers.PagesController.socket
++nocsrf
+POST    /pages/saveimage                        controllers.PagesController.saveImage
+GET     /pages/loadimage                        controllers.PagesController.loadImage(id : Long)
+GET     /pages/ws                               controllers.PagesController.socket
 GET     /pages                                  controllers.PagesController.index()
 
 GET     /accounting/ws                          controllers.AccountingController.socket
