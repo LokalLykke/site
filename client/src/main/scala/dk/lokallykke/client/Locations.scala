@@ -15,8 +15,9 @@ object Locations {
 
   object Pages {
     val prefix = "/pages"
-    def saveImage = s"$prefix/saveimage"
   }
+
+  val saveImage = s"/saveimage"
 
 
 

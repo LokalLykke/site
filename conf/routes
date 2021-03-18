@@ -5,14 +5,15 @@ GET     /items/ws                               controllers.ItemsController.sock
 POST    /items/upload                           controllers.ItemsController.upload
 GET     /items                                  controllers.ItemsController.index()
 
-+nocsrf
-POST    /pages/saveimage                        controllers.PagesController.saveImage
 GET     /pages/loadimage                        controllers.PagesController.loadImage(id : Long)
 GET     /pages/ws                               controllers.PagesController.socket
 GET     /pages                                  controllers.PagesController.index()
 
 GET     /accounting/ws                          controllers.AccountingController.socket
 GET     /accounting                             controllers.AccountingController.index
+
++nocsrf
+POST    /saveimage                              controllers.PagesController.saveImage
 
 GET     /assets/jslibrary.js                    controllers.LokalLykkeAssets.jsLibrary()
 GET     /assets/client-fastopt-bundle.js.map    controllers.LokalLykkeAssets.jsLibraryMap()

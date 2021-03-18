@@ -36,23 +36,6 @@ object Editor {
     editor
   }
 
-  /*def toolSettings = StringDictionary(
-    "tools" -> StringDictionary(
-      "header" -> StringDictionary(
-        "class" -> "Header",
-        "config" -> StringDictionary(
-          "placeholder" -> "Enter a heading",
-          "levels" -> js.Array(2,3,4,5),
-          "defaultLevel" -> 3
-        )
-      ),
-      "list" -> StringDictionary(
-        "class" -> "List",
-        "inlineToolbar" -> true
-      )
-    )
-  )*/
-
   @js.native
   @JSImport("@editorjs/list", JSImport.Namespace)
   object ListTool extends ToolConstructable
@@ -68,23 +51,19 @@ object Editor {
 
   def toolSettings: StringDictionary[ToolSettings[_]]  = StringDictionary(
     "list" -> toolSettingsMod.ToolSettings[Config](ListTool)
-      .setInlineToolbar(true),
+      .setInlineToolbar(false),
     "header" -> toolSettingsMod.ToolSettings[Config](HeaderTool)
       .setConfig(js.Dynamic.literal(
-        "config" -> js.Dynamic.literal(
           "placeholder" -> "Enter a heading",
           "levels" -> js.Array(2,3,4,5),
           "defaultLevel" -> 3
-        )
       ).asInstanceOf[ToolConfig[Config]]
     ),
     "image" -> toolSettingsMod.ToolSettings[Config](ImageTool)
       .setConfig(js.Dynamic.literal(
-        "config" -> js.Dynamic.literal(
           "endpoints" -> js.Dynamic.literal(
-            "byFile" -> Locations.Pages.saveImage
+            "byFile" -> Locations.saveImage
           )
-        )
       ).asInstanceOf[ToolConfig[Config]]
 
     )
@@ -92,7 +71,6 @@ object Editor {
 
   )
 
-  //Save
 
 
 

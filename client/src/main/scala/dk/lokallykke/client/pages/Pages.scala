@@ -7,6 +7,7 @@ import org.querki.jquery.{$, JQueryEventObject}
 import scala.scalajs.js
 import js.Thenable.Implicits._
 import scala.concurrent.ExecutionContext
+import scala.scalajs.js.UndefOr
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 
 @JSExportTopLevel("Pages")
@@ -14,6 +15,10 @@ object Pages {
   val FormTagsId = "pages-form-tags"
   val FormButtonId = "pages-form-button"
   var allTags : Seq[String] = Nil
+
+  trait BlockData extends js.Object {
+    def text : UndefOr[String]
+  }
 
   @JSExport
   def main() : Unit = {
@@ -23,7 +28,16 @@ object Pages {
       val future = editor.save().toFuture
       implicit val ec = ExecutionContext.global
       future.onComplete((tr) => {
-        println("Done finished saving")
+        tr.toOption.foreach {
+          case saveData => {
+            saveData.blocks.foreach {
+              case block => {
+                val tessa = block.data.asInstanceOf[BlockData]
+                println(s"Text: ${tessa.text}")
+              }
+            }
+          }
+        }
       })
     })
   }
