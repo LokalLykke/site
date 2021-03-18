@@ -2,7 +2,8 @@ package dk.lokallykke.client.pages
 
 import dk.lokallykke.client.util.Selector
 import dk.lokallykke.client.util.editor.Editor
-import org.querki.jquery.{$, JQueryEventObject}
+import dk.lokallykke.client.util.editor.Editor.OutputDataParser
+import org.querki.jquery.{$, JQuery, JQueryEventObject}
 
 import scala.scalajs.js
 import js.Thenable.Implicits._
@@ -12,39 +13,43 @@ import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
 
 @JSExportTopLevel("Pages")
 object Pages {
+  val FormTagsHolderId = "pages-form-tags-insert"
   val FormTagsId = "pages-form-tags"
   val FormButtonId = "pages-form-button"
-  var allTags : Seq[String] = Nil
+  val BlockEditorId = "pages-blocks-editor"
 
-  trait BlockData extends js.Object {
-    def text : UndefOr[String]
-  }
+  var allTags : Seq[String] = Nil
+  var tagSelector : Option[typings.selectize.JQuery] = None
+
 
   @JSExport
   def main() : Unit = {
-    Selector("pages-form-tags", allTags, List("op"))
-    val editor = Editor("crazy-editor")
+
+    val editor = Editor(BlockEditorId)
     $(s"#$FormButtonId").click((obj : JQueryEventObject) => {
-      val future = editor.save().toFuture
       implicit val ec = ExecutionContext.global
-      future.onComplete((tr) => {
-        tr.toOption.foreach {
-          case saveData => {
-            saveData.blocks.foreach {
-              case block => {
-                val tessa = block.data.asInstanceOf[BlockData]
-                println(s"Text: ${tessa.text}")
+      val parser = OutputDataParser(editor.save())
+      parser.result.onComplete {
+        case resTry => {
+          resTry.toOption.foreach {
+            case blocks => {
+              blocks.foreach {
+                case block => {
+                  println(block)
+                }
               }
             }
           }
         }
-      })
+      }
     })
   }
 
   @JSExport
   def setTags(tags : String) : Unit = {
     allTags = tags.split(";")
+    $(s"#$FormTagsId").remove()
+    tagSelector = Some(Selector(FormTagsId, appendTo = $(s"#$FormTagsHolderId"), allTags, Nil))
   }
 
 
