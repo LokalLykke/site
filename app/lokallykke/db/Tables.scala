@@ -80,7 +80,8 @@ trait Tables {
       def id = column[Long]("PAGEID", O.AutoInc)
       def name = column[String]("PAGENAME")
       def description = column[Option[String]]("DESCRIPTION")
-      def * = (id, name, description) <> (Page.tupled, Page.unapply)
+      def isdeleted = column[Int]("ISDELETED")
+      def * = (id, name, description, isdeleted) <> (Page.tupled, Page.unapply)
 
       def pk = primaryKey("PK_PAGES", (id))
     }

@@ -1,6 +1,9 @@
 package dk.lokallykke.client
 
 
+import dk.lokallykke.client.viewmodel.pages.ViewPage
+
+import scala.scalajs.js
 import scala.scalajs.js.JSON
 
 object Messages {
@@ -49,6 +52,30 @@ object Messages {
 
 
     }
+
+  }
+
+  object Pages {
+    object ToServer {
+      case class ToServerMessage(messageType : String, viewPage : Option[ViewPage] = None, pageId : Option[Long] = None)
+
+      val GetPage = "GetPage"
+      val SavePage = "SavePage"
+      val DeletePage = "DeletePage"
+
+    }
+
+    case class PageShell(id : Long, name : String)
+
+    trait PageTrait extends js.Object {
+      def id : Long
+      def name : String
+    }
+
+    object ToClient {
+      case class ToClientMessage(pages : Option[Seq[ViewPage]] = None, tags : Option[Seq[String]] = None, pageShells : Option[Seq[PageShell]] = None)
+    }
+
 
   }
 

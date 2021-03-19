@@ -1,12 +1,15 @@
 package dk.lokallykke.client.pages
 
+import dk.lokallykke.client.Messages.Pages.PageShell
 import dk.lokallykke.client.util.CommonUtil.$i
-import dk.lokallykke.client.util.{Selector, Validation}
-import dk.lokallykke.client.util.editor.Editor
+import dk.lokallykke.client.util.{Selector, Validation, WSConnector}
+import dk.lokallykke.client.util.editor._
 import dk.lokallykke.client.util.editor.Editor.OutputDataParser
 import dk.lokallykke.client.util.FutureExtensions._
 import dk.lokallykke.client.viewmodel.pages.ViewPage
+import io.circe.Json
 import org.querki.jquery.{$, JQuery, JQueryEventObject}
+import typings.editorjsEditorjs.mod
 
 import scala.scalajs.js
 import js.Thenable.Implicits._
@@ -26,14 +29,21 @@ object Pages {
   val BlockEditorId = "pages-blocks-editor"
 
 
+  var pageShells : Seq[PageShell] = Nil
   var allTags : Seq[String] = Nil
   var tagSelector : Option[typings.selectize.JQuery] = None
+  var currentViewPage : Option[ViewPage] = None
+  var editor : Option[mod.EditorJS] = None
+  private implicit val contx = ExecutionContext.global
 
+  $i(FormButtonId).click((obj : JQueryEventObject) => {
+    Validation.validateAndPerform(List(FormNameId), () => {
+      savePage()
+    })
+  })
 
-  @JSExport
-  def main() : Unit = {
-
-    val editor = Editor(BlockEditorId)
+/*
+ val editor = Editor(BlockEditorId)
     $i(FormButtonId).click((obj : JQueryEventObject) => {
       Validation.validateAndPerform(List(FormNameId), () => {
         editor.save().toFuture.whenDone {
@@ -46,11 +56,42 @@ object Pages {
       })
       val parser = OutputDataParser(editor.save())
     })
+
+ */
+
+  @JSExport
+  def main() : Unit = {
   }
 
   @JSExport
   def setTags(tags : String) : Unit = {
-    allTags = tags.split(";")
+    setTags(tags.split(";"))
+  }
+
+  def setTags(tags : Seq[String]) : Unit = {
+    allTags = tags
+  }
+
+  def setPageShells(shells : Seq[PageShell]) : Unit = {
+
+  }
+
+  def savePage() : Unit = {
+    editor.foreach {
+      case edit => {
+        edit.save().result.onComplete {
+          case tr => {
+            tr.foreach {
+              case blocks => {
+                currentViewPage = currentViewPage.map(p => p.copy(blocks = blocks))
+                savePage()
+              }
+            }
+          }
+        }
+      }
+    }
+
   }
 
   def insertViewPage(page : ViewPage) : Unit = {
@@ -87,10 +128,46 @@ object Pages {
         $(s"<div id='pages-blocks-editor'>")
       )
     )
+    bindEventHandlers()
     tagSelector = Some(Selector(FormTagsId, appendTo = $(s"#$FormTagsHolderId"), allTags, Nil))
+    editor = Some(Editor(BlockEditorId))
   }
 
+  private def bindEventHandlers() = {
+    val updatePairs : List[(String,(Any, ViewPage) => ViewPage)] = List(
+      FormNameId -> ((a,vp) => {vp.copy(name = a.toString)}),
+      FormDescriptionId -> ((a,vp) => {vp.copy(description = Some(a.toString).filter(_.trim.size > 0))}),
+      FormTagsId -> ((a,vp) => {vp.copy(tags = a.toString.split(";"))})
+    )
+    updatePairs.foreach {
+      case (elmId, updator) => {
+        val value : Any = $i(elmId).value()
+        updateWith(updator)(value)
+      }
+    }
 
+  }
+
+  private def updateWith(func : (Any, ViewPage) => ViewPage)(a : Any) = {
+    currentViewPage = currentViewPage.map(p => func(a,p))
+  }
+
+  object ItemsConnector extends WSConnector {
+
+    import io.circe.generic.auto._
+    import io.circe.syntax._
+    import io.circe.parser._
+    import dk.lokallykke.client.Messages.Pages._
+
+    override def onJson: Option[Json => Unit] = Some((js : Json) => {
+      js.as[ToClient.ToClientMessage].foreach {
+        case mess => {
+          mess.tags.foreach(tags => setTags(tags))
+        }
+      }
+    })
+
+  }
 
 
 }

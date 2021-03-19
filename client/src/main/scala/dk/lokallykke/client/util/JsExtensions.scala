@@ -1,6 +1,7 @@
 package dk.lokallykke.client.util
 
 import dk.lokallykke.client.util.JsExtensions.DateExtensions
+import dk.lokallykke.client.util.editor.Editor
 
 import java.text.{DecimalFormat, NumberFormat}
 import java.util.{Locale, TimeZone}
@@ -91,8 +92,6 @@ object JsExtensions {
     }
   }
 
-
-
   object DoubleExtensions {
     val numberLocale = Locale.forLanguageTag("da-DK")
     val formatPretty = NumberFormat.getInstance(numberLocale).asInstanceOf[DecimalFormat]
@@ -127,6 +126,8 @@ object JsExtensions {
     val dateTimeFormatter = DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")
     val inputDateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm")
   }
+
+
 
 
 

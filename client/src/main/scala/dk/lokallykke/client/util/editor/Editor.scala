@@ -75,7 +75,7 @@ object Editor {
 
   )
 
-  case class OutputDataParser(promise : Promise[outputDataMod.OutputData]) {
+  implicit class OutputDataParser(promise : Promise[outputDataMod.OutputData]) {
     private implicit val dt = 20.seconds
 
     def result = {
