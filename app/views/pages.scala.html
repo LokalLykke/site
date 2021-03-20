@@ -6,7 +6,7 @@
   <link rel="stylesheet" media="screen" href="@controllers.routes.LokalLykkeAssets.at("css/pages.css")">
 
   <script type="module">
-    Pages.setPageShells('@pageShellsString')
+    Pages.setPageShells('@Html(pageShellsString)')
     Pages.setTags('@tags')
     Pages.main()
   </script>
@@ -18,12 +18,12 @@
       <div class="row fill-vertical">
         <div class="col-1 bg-light side-bar border-right no-padding" style="background-color: #e3f2fd;">
           <div class="sidebar-sticky d-flex flex-column">
-            <h6 class="sidebar-heading d-flex text-muted my-4 mx-2">
-              <span>Sider</span>
-            </h6>
             <div class="form-group m-4">
               <btn class="btn btn-outline-success" id="pages-sidebar-create-button">Ny side</btn>
             </div>
+            <h6 class="sidebar-heading d-flex text-muted my-4 mx-2">
+              <span>Sider</span>
+            </h6>
             <div class='list-group list-group-flush' id="pages-sidebar-pages-insert">
             </div>
           </div>

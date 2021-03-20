@@ -16,6 +16,7 @@ import js.Thenable.Implicits._
 import scala.concurrent.ExecutionContext
 import scala.scalajs.js.UndefOr
 import scala.scalajs.js.annotation.{JSExport, JSExportTopLevel}
+import scala.util.{Failure, Try}
 
 @JSExportTopLevel("Pages")
 object Pages {
@@ -39,25 +40,17 @@ object Pages {
   var editor : Option[mod.EditorJS] = None
   private implicit val contx = ExecutionContext.global
 
-  $i(FormSaveButtonId).click((obj : JQueryEventObject) => {
-    Validation.validateAndPerform(List(FormNameId), () => {
-      savePage()
-    })
-  })
-
-  $i(FormDeleteButtonId).click((obj : JQueryEventObject) => {
-    Modal.Accept("Er du sikker?", "Er du sikker på at du vil slette siden?", () => {
-
-    }, "Ja", "Nej. Ikke alligevel")
-  })
-
-  $i(SidebarCreateButtonId).click((obj : JQueryEventObject) => {
-    clearSelection()
-    makeViewPageSelection(ViewPage(-1L, "Ny side", None, Nil, Nil))
-  })
 
   @JSExport
   def main() : Unit = {
+
+    $i(SidebarCreateButtonId).click((obj : JQueryEventObject) => {
+      println("Creating a new page")
+      clearSelection()
+      makeViewPageSelection(ViewPage(-1L, "Ny side", None, Nil, Nil))
+    })
+
+    PageConnector.connectToServer
   }
 
   @JSExport
@@ -70,7 +63,7 @@ object Pages {
   }
 
   @JSExport
-  def setPageShells(shellsString : String) : Unit = {
+  def setPageShells(shellsString : String) : Unit = Try {
     import io.circe.parser._
     import io.circe.Decoder
     import io.circe.generic.semiauto._
@@ -82,10 +75,12 @@ object Pages {
         val shells = js.asArray.get.map{i =>
           decode[PageShell](i.toString).toOption.get
         }
-        setPageShells(shellsString)
+        setPageShells(shells)
       }
     }
-
+  } match {
+    case Failure(err) => err.printStackTrace()
+    case _ =>
   }
 
   def setPageShells(newShells : Seq[PageShell]) = {
@@ -146,8 +141,7 @@ object Pages {
             ),
             $("<div class='form-row'>").append(
               $(s"<div class='form-group col-12' id='$FormTagsHolderId'>").append(
-                $(s"<label for='$FormTagsId'>").text("Mærkater"),
-                $(s"<input id='$FormTagsId'>")
+                $(s"<label for='$FormTagsId'>").text("Mærkater")
               )
             ),
             $("<div class='form-row justify-content-end'>").append(
@@ -166,6 +160,7 @@ object Pages {
       )
     )
     bindEventHandlers()
+    bindFormButtons()
     tagSelector = Some(Selector(FormTagsId, appendTo = $(s"#$FormTagsHolderId"), allTags, page.tags))
     val blocks = page.blocks.map {
       case bl => Editor.EditorData.Block(bl.blockType, bl.text, bl.level, bl.style, bl.items, bl.fileUrl, bl.caption, bl.withBorder, bl.stretched, bl.withBackground)
@@ -175,6 +170,21 @@ object Pages {
 
   def showError(error : String) = {
     org.scalajs.dom.window.alert(error)
+  }
+
+  private def bindFormButtons() : Unit = {
+    $i(FormSaveButtonId).click((obj : JQueryEventObject) => {
+      Validation.validateAndPerform(List(FormNameId), () => {
+        savePage()
+      })
+    })
+
+    $i(FormDeleteButtonId).click((obj : JQueryEventObject) => {
+      Modal.Accept("Er du sikker?", "Er du sikker på at du vil slette siden?", () => {
+
+      }, "Ja", "Nej. Ikke alligevel")
+    })
+
   }
 
   private def bindEventHandlers() = {
@@ -233,6 +243,7 @@ object Pages {
 
     private def send(mess : ToServer.ToServerMessage) : Unit = {
       val str : String = mess.asJson.toString
+      println(s"Sending message: $str")
       super.!(str)
     }
 

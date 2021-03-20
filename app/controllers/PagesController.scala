@@ -73,12 +73,12 @@ class PagesController  @Inject()(cc : ControllerComponents, site : Site)(implici
 
     def send(outMessage : ToClient.ToClientMessage) = {
       val asJson = Json.toJson(outMessage)
-      out ! Json.stringify(asJson)
+      out ! asJson
     }
 
     def sendShells = {
       val shells = handler.loadPageIdAndNames.map(p => PageShell(p._1, p._2)).sortBy(_.name)
-      send(ToClient.ToClientMessage(shells = Some(shells)))
+      send(ToClient.ToClientMessage(pageShells = Some(shells)))
 
     }
 
@@ -87,12 +87,14 @@ class PagesController  @Inject()(cc : ControllerComponents, site : Site)(implici
         val message = Json.parse(mess.toString).as[ToServer.ToServerMessage]
         message.messageType match {
           case ToServer.GetPage => {
+            println(s"Fetching page with ID: ${message.pageId}")
             for(
               pid <- message.pageId;
               pag <- PagesController.loadViewPags(pid, handler)
             ) {
               val tags = handler.loadTags
               val outMessage = ToClient.ToClientMessage(page = Some(pag), tags = Some(tags))
+              println(s"Sending message: ${outMessage}")
               send(outMessage)
             }
           }
@@ -111,6 +113,10 @@ class PagesController  @Inject()(cc : ControllerComponents, site : Site)(implici
         }
 
       }
+        match {
+        case Success(_) =>
+        case Failure(err) => err.printStackTrace()
+      }
     }
 
     override def pingOut: ActorRef = out
@@ -120,10 +126,11 @@ class PagesController  @Inject()(cc : ControllerComponents, site : Site)(implici
 }
 
 object PagesController {
+  implicit val blockReads : Reads[Block] = Json.reads[Block]
   implicit val viewPageReads : Reads[ViewPage] = Json.reads[ViewPage]
   implicit val toServerMessageReads : Reads[ToServer.ToServerMessage] = Json.reads[ToServer.ToServerMessage]
   implicit val pageShellWrites : Writes[PageShell] = Json.writes[PageShell]
-  implicit val blockWrites : Writes[Editor.EditorData.Block] = Json.writes[Editor.EditorData.Block]
+  implicit val blockWrites : Writes[Block] = Json.writes[Block]
   implicit val viewPageWrites : Writes[ViewPage] = Json.writes[ViewPage]
   implicit val toClientWrites : Writes[ToClient.ToClientMessage] = Json.writes[ToClient.ToClientMessage]
 

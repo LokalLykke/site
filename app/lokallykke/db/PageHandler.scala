@@ -52,8 +52,8 @@ trait PageHandler {
       case pag => {
         val tags = Await.result(db.run(pageTags.filter(_.pageid === pageId).result), dt)
         val content = Await.result(db.run(pageContent.filter(_.pageid === pageId).result), dt)
-        val contentItems = Await.result(db.run(contentItems.filter(ci => ci.contentid.inSetBind(content.map(_.id).distinct)).result), dt)
-        PageResults.LoadResult(pag, tags, content, contentItems)
+        val citems = Await.result(db.run(contentItems.filter(ci => ci.contentid.inSetBind(content.map(_.id).distinct)).result), dt)
+        PageResults.LoadResult(pag, tags, content, citems)
       }
     }
   }
