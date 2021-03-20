@@ -21,12 +21,14 @@ import scala.util.{Failure, Success, Try}
 
 class PagesController  @Inject()(cc : ControllerComponents, site : Site)(implicit inSys : ActorSystem, inMat : Materializer) extends PageController(cc) {
 
-  val handler = site.itemHandler
+  val handler = site.pageHandler
 
   def index = actionFrom {
     case request : Request[AnyContent] => {
-      val tags = site.itemHandler.loadDistinctTags
-      Ok(views.html.pages("", tags.mkString(";")))
+      import PagesController._
+      val shells = Json.stringify(Json.toJson(handler.loadPageIdAndNames.map(p => PageShell(p._1, p._2)).sortBy(_.name)))
+      val tags = handler.loadTags
+      Ok(views.html.pages(shells, tags.mkString(";")))
     }
 
   }
@@ -69,20 +71,42 @@ class PagesController  @Inject()(cc : ControllerComponents, site : Site)(implici
   class PagesWSActor(out : ActorRef, site : Site) extends Actor with Pingable {
     import PagesController._
 
+    def send(outMessage : ToClient.ToClientMessage) = {
+      val asJson = Json.toJson(outMessage)
+      out ! Json.stringify(asJson)
+    }
 
+    def sendShells = {
+      val shells = handler.loadPageIdAndNames.map(p => PageShell(p._1, p._2)).sortBy(_.name)
+      send(ToClient.ToClientMessage(shells = Some(shells)))
+
+    }
 
     override def receive = {
       case mess => Try {
         val message = Json.parse(mess.toString).as[ToServer.ToServerMessage]
         message.messageType match {
           case ToServer.GetPage => {
-
+            for(
+              pid <- message.pageId;
+              pag <- PagesController.loadViewPags(pid, handler)
+            ) {
+              val tags = handler.loadTags
+              val outMessage = ToClient.ToClientMessage(page = Some(pag), tags = Some(tags))
+              send(outMessage)
+            }
           }
           case ToServer.DeletePage => {
-
+            message.pageId.foreach(p => handler.deletePage(p))
+            sendShells
           }
           case ToServer.SavePage => {
-
+            message.viewPage.foreach {
+              case pag => {
+                PagesController.saveViewPage(pag, handler)
+                sendShells
+              }
+            }
           }
         }
 
@@ -98,6 +122,10 @@ class PagesController  @Inject()(cc : ControllerComponents, site : Site)(implici
 object PagesController {
   implicit val viewPageReads : Reads[ViewPage] = Json.reads[ViewPage]
   implicit val toServerMessageReads : Reads[ToServer.ToServerMessage] = Json.reads[ToServer.ToServerMessage]
+  implicit val pageShellWrites : Writes[PageShell] = Json.writes[PageShell]
+  implicit val blockWrites : Writes[Editor.EditorData.Block] = Json.writes[Editor.EditorData.Block]
+  implicit val viewPageWrites : Writes[ViewPage] = Json.writes[ViewPage]
+  implicit val toClientWrites : Writes[ToClient.ToClientMessage] = Json.writes[ToClient.ToClientMessage]
 
 
   def loadViewPags(pageId : Long, handler : PageHandler) : Option[ViewPage] = {

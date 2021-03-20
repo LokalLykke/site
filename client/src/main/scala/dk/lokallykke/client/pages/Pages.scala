@@ -208,10 +208,10 @@ object Pages {
     override def onJson: Option[Json => Unit] = Some((js : Json) => {
       js.as[ToClient.ToClientMessage].foreach {
         case mess => {
+          mess.pageShells.foreach(ps => setPageShells(ps))
           mess.tags.foreach(tags => setTags(tags))
           mess.page.foreach(p => makeViewPageSelection(p))
           mess.errorMessage.foreach(err => showError(err))
-          mess.pageShells.foreach(ps => setPageShells(ps))
         }
       }
     })

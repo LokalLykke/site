@@ -19,6 +19,7 @@ trait PageHandler {
   lazy val pageTags = tables.Pages.pageTags
   lazy val pageContent = tables.Pages.pageContent
   lazy val contentItems = tables.Pages.contentItems
+  lazy val itemTags = tables.Items.tags
 
   lazy val insertImage = images.returning(images.map(_.id)).into((img, pid) => img.copy(id = pid))
   lazy val insertPage = pages.returning(pages.map(_.id)).into((pag, pid) => pag.copy(id = pid))
@@ -39,6 +40,11 @@ trait PageHandler {
 
   def loadPageIdAndNames = {
     Await.result(db.run(livePages.map(en => (en.id, en.name)).result), dt)
+  }
+
+  def loadTags = {
+    val query =  pageTags.map(_.tagname) union itemTags.map(_.tagname)
+    Await.result(db.run(query.result), dt)
   }
 
   def loadPage(pageId : Long) : Option[PageResults.LoadResult] = {
