@@ -10,6 +10,7 @@ case class PageContent(
                       style : Option[String] = None,
                       level : Option[Int] = None,
                       imageid : Option[Long] = None,
+                      caption : Option[String] = None,
                       withborder : Option[Int] = None,
                       stretched : Option[Int] = None,
                       withbackground : Option[Int] = None

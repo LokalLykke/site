@@ -56,23 +56,6 @@ object Pages {
     makeViewPageSelection(ViewPage(-1L, "Ny side", None, Nil, Nil))
   })
 
-/*
- val editor = Editor(BlockEditorId)
-    $i(FormButtonId).click((obj : JQueryEventObject) => {
-      Validation.validateAndPerform(List(FormNameId), () => {
-        editor.save().toFuture.whenDone {
-          case outData => {
-            outData.blocks.foreach {
-              case block => println(block)
-            }
-          }
-        }
-      })
-      val parser = OutputDataParser(editor.save())
-    })
-
- */
-
   @JSExport
   def main() : Unit = {
   }
@@ -86,6 +69,7 @@ object Pages {
     allTags = tags
   }
 
+  @JSExport
   def setPageShells(shellsString : String) : Unit = {
     import io.circe.parser._
     import io.circe.Decoder
@@ -189,6 +173,10 @@ object Pages {
     editor = Some(Editor(BlockEditorId, blocks))
   }
 
+  def showError(error : String) = {
+    org.scalajs.dom.window.alert(error)
+  }
+
   private def bindEventHandlers() = {
     val updatePairs : List[(String,(Any, ViewPage) => ViewPage)] = List(
       FormNameId -> ((a,vp) => {vp.copy(name = a.toString)}),
@@ -221,6 +209,9 @@ object Pages {
       js.as[ToClient.ToClientMessage].foreach {
         case mess => {
           mess.tags.foreach(tags => setTags(tags))
+          mess.page.foreach(p => makeViewPageSelection(p))
+          mess.errorMessage.foreach(err => showError(err))
+          mess.pageShells.foreach(ps => setPageShells(ps))
         }
       }
     })

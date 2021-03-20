@@ -1,7 +1,7 @@
 package lokallykke.db
 
 import lokallykke.model.items.{Item, ItemTag}
-import lokallykke.model.pages.{Image, Page, PageContent, PageTag}
+import lokallykke.model.pages.{Image, Page, PageContent, PageContentItem, PageTag}
 import org.slf4j.LoggerFactory
 import slick.jdbc.JdbcProfile
 
@@ -55,13 +55,13 @@ trait Tables {
       def indxInsta = index("IDX_ITEM_INSID", (instagramId), false)
     }
 
-    class ItemTagTable(tag : Tag) extends Table[ItemTag](tag, "TAGS"){
+    class ItemTagTable(tag : Tag) extends Table[ItemTag](tag, "ITEMTAGS"){
       def itemid = column[Long]("ITEMID")
       def tagname = column[String]("TAG")
       def * =(itemid, tagname) <> (ItemTag.tupled, ItemTag.unapply)
 
-      def pk = primaryKey("PK_TAGS", (itemid, tagname))
-      def fkItem = foreignKey("FK_TAGS_ITEMID", (itemid), items)(_.id, onDelete = ForeignKeyAction.Cascade)
+      def pk = primaryKey("PK_ITEMTAGS", (itemid, tagname))
+      def fkItem = foreignKey("FK_ITEMTAGS_ITEMID", (itemid), items)(_.id, onDelete = ForeignKeyAction.Cascade)
     }
 
   }
@@ -72,9 +72,10 @@ trait Tables {
     val pageTags = TableQuery[PageTagTable]
     val images = TableQuery[ImageTable]
     val pageContent = TableQuery[PageContentTable]
+    val contentItems = TableQuery[PageContentItemsTable]
 
 
-    val schema = pages.schema ++ pageTags.schema ++ images.schema ++ pageContent.schema
+    val schema = pages.schema ++ pageTags.schema ++ images.schema ++ pageContent.schema ++ contentItems.schema
 
     class PageTable(tag : Tag) extends Table[Page](tag, "PAGES"){
       def id = column[Long]("PAGEID", O.AutoInc)
@@ -114,14 +115,24 @@ trait Tables {
       def style = column[Option[String]]("STYLE")
       def level = column[Option[Int]]("LEVEL")
       def imageid = column[Option[Long]]("IMAGEID")
+      def caption = column[Option[String]]("CAPTION")
       def withborder = column[Option[Int]]("BORDER")
       def stretched = column[Option[Int]]("STRETCHED")
       def withbackground = column[Option[Int]]("BACKGROUND")
-      def * = (id, pageid, indx, contenttype, parentid, text, style, level, imageid, withborder, stretched, withbackground) <> (PageContent.tupled, PageContent.unapply)
+      def * = (id, pageid, indx, contenttype, parentid, text, style, level, imageid, caption, withborder, stretched, withbackground) <> (PageContent.tupled, PageContent.unapply)
 
       def pk = primaryKey("PK_PAGECONTENT", (id))
       def fkPage = foreignKey("FK_PAGECONTENT_PAGE", (pageid), pages)(_.id, onDelete = ForeignKeyAction.Cascade)
+    }
 
+    class PageContentItemsTable(tag : Tag) extends Table[PageContentItem](tag, "PAGECONTIT") {
+      def contentid = column[Long]("CONTENTID")
+      def indx = column[Int]("INDX")
+      def text = column[String]("TEXT")
+      def * = (contentid, indx, text) <> (PageContentItem.tupled, PageContentItem.unapply)
+
+      def pk = primaryKey("PK_PAGECONTIT", (contentid, indx))
+      def fkCont = foreignKey("FK_PAGECONTIT", (contentid), pageContent)(_.id, onDelete = ForeignKeyAction.Cascade)
     }
 
   }

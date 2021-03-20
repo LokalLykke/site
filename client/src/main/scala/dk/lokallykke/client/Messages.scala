@@ -73,7 +73,8 @@ object Messages {
     }
 
     object ToClient {
-      case class ToClientMessage(pages : Option[Seq[ViewPage]] = None, tags : Option[Seq[String]] = None, pageShells : Option[Seq[PageShell]] = None)
+      case class ToClientMessage(tags : Option[Seq[String]] = None, pageShells : Option[Seq[PageShell]] = None,
+                                 page : Option[ViewPage] = None, errorMessage : Option[String] = None)
     }
 
 

@@ -1,4 +1,4 @@
-@(pages : Seq[_root_.dk.lokallykke.client.viewmodel.pages.ViewPage], tags : String)
+@(pageShellsString : String, tags : String)
 
 @import _root_.play.api.libs.json.Json
 
@@ -6,6 +6,7 @@
   <link rel="stylesheet" media="screen" href="@controllers.routes.LokalLykkeAssets.at("css/pages.css")">
 
   <script type="module">
+    Pages.setPageShells('@pageShellsString')
     Pages.setTags('@tags')
     Pages.main()
   </script>
