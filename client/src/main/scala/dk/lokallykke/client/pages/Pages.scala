@@ -2,7 +2,7 @@ package dk.lokallykke.client.pages
 
 import dk.lokallykke.client.Messages.Pages.PageShell
 import dk.lokallykke.client.util.CommonUtil.$i
-import dk.lokallykke.client.util.{Selector, Validation, WSConnector}
+import dk.lokallykke.client.util.{Modal, Selector, Validation, WSConnector}
 import dk.lokallykke.client.util.editor._
 import dk.lokallykke.client.util.editor.Editor.OutputDataParser
 import dk.lokallykke.client.util.FutureExtensions._
@@ -25,8 +25,11 @@ object Pages {
   val FormDescriptionId = "pages-form-description"
   val FormTagsHolderId = "pages-form-tags-insert"
   val FormTagsId = "pages-form-tags"
-  val FormButtonId = "pages-form-button"
+  val FormSaveButtonId = "pages-form-save-button"
+  val FormDeleteButtonId = "pages-form-delete-button"
   val BlockEditorId = "pages-blocks-editor"
+  val SidebarPagesInsertId = "pages-sidebar-pages-insert"
+  val SidebarCreateButtonId = "pages-sidebar-create-button"
 
 
   var pageShells : Seq[PageShell] = Nil
@@ -36,10 +39,21 @@ object Pages {
   var editor : Option[mod.EditorJS] = None
   private implicit val contx = ExecutionContext.global
 
-  $i(FormButtonId).click((obj : JQueryEventObject) => {
+  $i(FormSaveButtonId).click((obj : JQueryEventObject) => {
     Validation.validateAndPerform(List(FormNameId), () => {
       savePage()
     })
+  })
+
+  $i(FormDeleteButtonId).click((obj : JQueryEventObject) => {
+    Modal.Accept("Er du sikker?", "Er du sikker på at du vil slette siden?", () => {
+
+    }, "Ja", "Nej. Ikke alligevel")
+  })
+
+  $i(SidebarCreateButtonId).click((obj : JQueryEventObject) => {
+    clearSelection()
+    makeViewPageSelection(ViewPage(-1L, "Ny side", None, Nil, Nil))
   })
 
 /*
@@ -72,8 +86,36 @@ object Pages {
     allTags = tags
   }
 
-  def setPageShells(shells : Seq[PageShell]) : Unit = {
+  def setPageShells(shellsString : String) : Unit = {
+    import io.circe.parser._
+    import io.circe.Decoder
+    import io.circe.generic.semiauto._
+    implicit val decoder : Decoder[PageShell] = deriveDecoder
 
+    parse(shellsString) match {
+      case Left(err) => println(err.message)
+      case Right(js) => {
+        val shells = js.asArray.get.map{i =>
+          decode[PageShell](i.toString).toOption.get
+        }
+        setPageShells(shellsString)
+      }
+    }
+
+  }
+
+  def setPageShells(newShells : Seq[PageShell]) = {
+    pageShells = newShells
+    $i(SidebarPagesInsertId).empty()
+    pageShells.foreach {
+      case sh => {
+        val pageElem = $(s"<a class='list-group-item list-group-item-action' typ='items-nav' href='#' page-id='${sh.id}'>").text(sh.name)
+        $i(SidebarPagesInsertId).append(
+          pageElem
+        )
+        $(pageElem).click((obj : JQueryEventObject) => { PageConnector.requestPage(sh.id)})
+      }
+    }
   }
 
   def savePage() : Unit = {
@@ -84,7 +126,7 @@ object Pages {
             tr.foreach {
               case blocks => {
                 currentViewPage = currentViewPage.map(p => p.copy(blocks = blocks))
-                savePage()
+                currentViewPage.foreach(p => PageConnector.savePage(p))
               }
             }
           }
@@ -94,8 +136,16 @@ object Pages {
 
   }
 
-  def insertViewPage(page : ViewPage) : Unit = {
+  def clearSelection() = {
+    editor.foreach(ed => ed.destroy())
     $i(ContentId).empty()
+    currentViewPage = None
+    editor = None
+  }
+
+  def makeViewPageSelection(page : ViewPage) : Unit = {
+    clearSelection()
+    currentViewPage = Some(page)
     $i(ContentId).append(
       $("<div class='row'>").append(
         $("<div class='col-12'>").append(
@@ -117,8 +167,11 @@ object Pages {
               )
             ),
             $("<div class='form-row justify-content-end'>").append(
+              $("<div class='form-group col-2'>").append(
+                $(s"<button type='button' id='$FormDeleteButtonId' class='btn btn-outline-danger'>").text("Slet side")
+              ),
               $("<div class='form-group col'>").append(
-                $(s"<button type='button' id='$FormButtonId' class='btn btn-info'>").text("Gem")
+                $(s"<button type='button' id='$FormSaveButtonId' class='btn btn-outline-info'>").text("Gem")
               )
             )
           )
@@ -129,8 +182,11 @@ object Pages {
       )
     )
     bindEventHandlers()
-    tagSelector = Some(Selector(FormTagsId, appendTo = $(s"#$FormTagsHolderId"), allTags, Nil))
-    editor = Some(Editor(BlockEditorId))
+    tagSelector = Some(Selector(FormTagsId, appendTo = $(s"#$FormTagsHolderId"), allTags, page.tags))
+    val blocks = page.blocks.map {
+      case bl => Editor.EditorData.Block(bl.blockType, bl.text, bl.level, bl.style, bl.items, bl.fileUrl, bl.caption, bl.withBorder, bl.stretched, bl.withBackground)
+    }
+    editor = Some(Editor(BlockEditorId, blocks))
   }
 
   private def bindEventHandlers() = {
@@ -141,8 +197,10 @@ object Pages {
     )
     updatePairs.foreach {
       case (elmId, updator) => {
-        val value : Any = $i(elmId).value()
-        updateWith(updator)(value)
+        $i(elmId).change((obj : JQueryEventObject) => {
+          val value : Any = $i(elmId).value()
+          updateWith(updator)(value)
+        })
       }
     }
 
@@ -152,7 +210,7 @@ object Pages {
     currentViewPage = currentViewPage.map(p => func(a,p))
   }
 
-  object ItemsConnector extends WSConnector {
+  object PageConnector extends WSConnector {
 
     import io.circe.generic.auto._
     import io.circe.syntax._
@@ -166,6 +224,27 @@ object Pages {
         }
       }
     })
+
+    def requestPage(pageId : Long) : Unit = {
+      val mess = ToServer.ToServerMessage(ToServer.GetPage, pageId = Some(pageId))
+      send(mess)
+    }
+
+    def savePage(page : ViewPage) : Unit = {
+      val mess = ToServer.ToServerMessage(ToServer.SavePage, Some(page))
+      send(mess)
+    }
+
+    def deletePage(pageId : Long) : Unit = {
+      val mess = ToServer.ToServerMessage(ToServer.DeletePage, pageId = Some(pageId))
+      send(mess)
+    }
+
+    private def send(mess : ToServer.ToServerMessage) : Unit = {
+      val str : String = mess.asJson.toString
+      super.!(str)
+    }
+
 
   }
 

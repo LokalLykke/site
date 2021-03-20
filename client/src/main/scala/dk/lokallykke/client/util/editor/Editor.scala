@@ -30,12 +30,13 @@ object Editor {
 
   val tools = toolSettingsMod.ToolboxConfig.apply()
 
-  def apply(insertId : String) : mod.EditorJS = {
+  def apply(insertId : String, blocks : Seq[EditorData.Block] = Nil) : mod.EditorJS = {
     val config = editorConfigMod.EditorConfig()
       .setHolder(insertId)
       .setHideToolbar(false)
       .setTools(toolSettings)
     val editor = new mod.default(config)
+    blocks.foreach(bl => editor.blocks.insert(bl.blockType,bl.toDataInput))
     editor
   }
 
@@ -123,10 +124,46 @@ object Editor {
 
     case class Block(blockType : String, text : Option[String] = None, level : Option[Int] = None, style : Option[String] = None,
                      items : Option[Seq[String]] = None, fileUrl : Option[String] = None, caption : Option[String] = None,
-                     withBorder : Option[Boolean] = None, stretched : Option[Boolean] = None, withBackground : Option[Boolean] = None)
+                     withBorder : Option[Boolean] = None, stretched : Option[Boolean] = None, withBackground : Option[Boolean] = None) {
+      def toDataInput = convertToBlockData(this)
+    }
+
+
+    def convertToBlockData(block : Block) = {
+      import js.JSConverters._
+      js.Dynamic.literal(
+        "type" -> block.blockType,
+        "data" -> (BlockType(block.blockType) match {
+            case BlockType.Paragraph => js.Dynamic.literal(
+              "text" -> block.text.orUndefined
+            )
+            case BlockType.Header => js.Dynamic.literal(
+              "text" -> block.text.orUndefined,
+              "level" -> block.level.orUndefined
+            )
+            case BlockType.List => js.Dynamic.literal(
+              "items" -> block.items.map(_.toJSArray).orUndefined,
+              "style" -> block.style.orUndefined
+            )
+            case BlockType.Image => js.Dynamic.literal(
+              "file" -> js.Dynamic.literal(
+                "url" -> block.fileUrl.orUndefined
+              ),
+              "withBorder" -> block.withBackground.orUndefined,
+              "withBackground" -> block.withBackground.orUndefined,
+              "stretched" -> block.stretched.orUndefined
+            )
+          })
+      )
+    }
   }
 
+/*
+                  case BlockType.List => EditorData.Block(blockType = typ.idStr, items = dat.items.toOption, style = dat.style.toOption)
+                  case BlockType.Image => EditorData.Block(blockType = typ.idStr, fileUrl = dat.file.toOption.flatMap(_.url.toOption), withBorder = dat.withBackground.toOption, withBackground = dat.withBorder.toOption, stretched = dat.stretched.toOption)
 
+
+ */
   object ParsingObjects {
 
     trait BlockDataFile extends js.Object {
