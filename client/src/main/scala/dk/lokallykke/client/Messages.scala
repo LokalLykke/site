@@ -1,6 +1,7 @@
 package dk.lokallykke.client
 
 
+import dk.lokallykke.client.viewmodel.items.ViewItem
 import dk.lokallykke.client.viewmodel.pages.ViewPage
 
 import scala.scalajs.js
@@ -57,11 +58,12 @@ object Messages {
 
   object Pages {
     object ToServer {
-      case class ToServerMessage(messageType : String, viewPage : Option[ViewPage] = None, pageId : Option[Long] = None)
+      case class ToServerMessage(messageType : String, viewPage : Option[ViewPage] = None, pageId : Option[Long] = None, tags : Option[Seq[String]] = None)
 
       val GetPage = "GetPage"
       val SavePage = "SavePage"
       val DeletePage = "DeletePage"
+      val ExecuteFilter = "ExecuteFilter"
 
     }
 
@@ -74,7 +76,7 @@ object Messages {
 
     object ToClient {
       case class ToClientMessage(tags : Option[Seq[String]] = None, pageShells : Option[Seq[PageShell]] = None,
-                                 page : Option[ViewPage] = None, errorMessage : Option[String] = None)
+                                 page : Option[ViewPage] = None, errorMessage : Option[String] = None, items : Option[Seq[ViewItem]] = None)
     }
 
 

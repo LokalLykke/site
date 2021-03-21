@@ -1,5 +1,7 @@
 package dk.lokallykke.client.util
 
+import dk.lokallykke.client.util.CommonUtil.$i
+import dk.lokallykke.client.util.tables.{Column, TableBuilder}
 import org.querki.jquery.{$, JQuery, JQueryEventObject, JQueryStatic}
 
 import java.time.LocalDateTime
@@ -61,6 +63,30 @@ object Modal {
         selRes._2.foreach(vr => resolvers += vr)
       }
     }
+  }
+
+  def tabled[A](id : String, title : String, cols : Seq[Column[A,_]], items : Seq[A]) : Unit = {
+    val body = $(s"<div class='modal-body' id='$id-table-insert'>")
+    val tableBuilder = TableBuilder[A](s"$id-table", cols, imageSize = 20, inTableClass = "table table-hover table-sm")
+    val tab = tableBuilder.buildTable(items)
+    body.append(
+      $(tab)
+    )
+
+    val modal = $(s"<div class='modal fade' id='$id' role='dialog' aria-labelledby='$id-center-title' aria-hidden='true'>").append(
+      $("<div class='modal-dialog modal-dialog-centered modal-xl' role='document'>").append(
+        $("<div class='modal-content'>").append(
+          $("<div class='modal-header'>").append(
+            $(s"<h5 class='modal-title' id='$id-center-title'>").text(title),
+            $("<button type='button' class='close' data-dismiss='modal' aria-label='Close'>").append(
+              $("<span aria-hidden='true'>").html("&times;")
+            )
+          ),
+          body
+        )
+      )
+    )
+    displayModal(modal)
   }
 
   def bodyContentFromField(field : ModalField) : (JQuery, Option[(String, () => Option[Any])]) = {

@@ -99,6 +99,17 @@ trait ItemHandler {
     Await.result(db.run(tags ++= insertees), dt)
   }
 
+  def loadItemsMatchingTags(filterTags : Seq[String]) = {
+    val query = if(filterTags.isEmpty) {
+      liveItems
+    }
+    else {
+      val itemRels = tags.filter(tag => tag.tagname.inSetBind(filterTags)).map(_.itemid).distinct
+      (liveItems join itemRels on {_.id === _}).map(_._1)
+    }
+    Await.result(db.run(query.result), dt)
+  }
+
 
 
 }

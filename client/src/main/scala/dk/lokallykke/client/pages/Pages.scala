@@ -1,11 +1,15 @@
 package dk.lokallykke.client.pages
 
+import dk.lokallykke.client.Locations
 import dk.lokallykke.client.Messages.Pages.PageShell
+import dk.lokallykke.client.items.Items.availableTags
 import dk.lokallykke.client.util.CommonUtil.$i
 import dk.lokallykke.client.util.{Modal, Selector, Validation, WSConnector}
 import dk.lokallykke.client.util.editor._
 import dk.lokallykke.client.util.editor.Editor.OutputDataParser
-import dk.lokallykke.client.util.FutureExtensions._
+import dk.lokallykke.client.util.JsExtensions._
+import dk.lokallykke.client.util.tables.Column.{DateTimeColumn, DoubleColumn, ImageColumn, StringColumn}
+import dk.lokallykke.client.viewmodel.items.ViewItem
 import dk.lokallykke.client.viewmodel.pages.ViewPage
 import io.circe.Json
 import org.querki.jquery.{$, JQuery, JQueryEventObject}
@@ -26,6 +30,7 @@ object Pages {
   val FormDescriptionId = "pages-form-description"
   val FormTagsHolderId = "pages-form-tags-insert"
   val FormTagsId = "pages-form-tags"
+  val FormExecuteFilterId = "pages-form-execute-tag-filter-button"
   val FormSaveButtonId = "pages-form-save-button"
   val FormDeleteButtonId = "pages-form-delete-button"
   val BlockEditorId = "pages-blocks-editor"
@@ -144,11 +149,14 @@ object Pages {
                 $(s"<label for='$FormTagsId'>").text("Mærkater")
               )
             ),
-            $("<div class='form-row justify-content-end'>").append(
+            $("<div class='form-row'>").append(
+              $("<div class='form-group col-8'>").append(
+                $(s"<button type='button' id='$FormExecuteFilterId' class='btn btn-outline-primary'>").text("Afprøv filter")
+              ),
               $("<div class='form-group col-2'>").append(
                 $(s"<button type='button' id='$FormDeleteButtonId' class='btn btn-outline-danger'>").text("Slet side")
               ),
-              $("<div class='form-group col'>").append(
+              $("<div class='form-group col-2'>").append(
                 $(s"<button type='button' id='$FormSaveButtonId' class='btn btn-outline-info'>").text("Gem")
               )
             )
@@ -159,9 +167,9 @@ object Pages {
         $(s"<div id='pages-blocks-editor'>")
       )
     )
+    tagSelector = Some(Selector(FormTagsId, appendTo = $(s"#$FormTagsHolderId"), allTags, page.tags))
     bindEventHandlers()
     bindFormButtons()
-    tagSelector = Some(Selector(FormTagsId, appendTo = $(s"#$FormTagsHolderId"), allTags, page.tags))
     val blocks = page.blocks.map {
       case bl => Editor.EditorData.Block(bl.blockType, bl.text, bl.level, bl.style, bl.items, bl.fileUrl, bl.caption, bl.withBorder, bl.stretched, bl.withBackground)
     }
@@ -173,6 +181,13 @@ object Pages {
   }
 
   private def bindFormButtons() : Unit = {
+    $i(FormExecuteFilterId).click((obj : JQueryEventObject) => {
+      val tagString = $i(FormTagsId).value()
+      if(tagString != null) {
+        PageConnector.executeFilter(tagString.toString.split(";"))
+      }
+    })
+
     $i(FormSaveButtonId).click((obj : JQueryEventObject) => {
       Validation.validateAndPerform(List(FormNameId), () => {
         savePage()
@@ -208,6 +223,23 @@ object Pages {
     currentViewPage = currentViewPage.map(p => func(a,p))
   }
 
+  object ItemsTable {
+    val imageCol = ImageColumn[ViewItem]("image", "Billede", None, en => Some(Locations.Items.itemImage(en.itemId)))
+    val nameCol = StringColumn[ViewItem]("name", "Navn",_.name)
+    val captionCol = StringColumn[ViewItem]("caption", "Beskrivelse",_.caption)
+    val registeredCol = DateTimeColumn[ViewItem]("registered", "Registreret", en => Some(en.registered.toDateTime))
+    val costValueCol = DoubleColumn[ViewItem]("costvalue", "Købsværdi", en => en.costValue )
+    val askPriceCol = DoubleColumn[ViewItem]("askprice", "Til salg for", en => en.askPrice)
+
+    val columns = List(imageCol, nameCol, captionCol, registeredCol, costValueCol, askPriceCol)
+  }
+
+  def displayItems(items : Seq[ViewItem]) = {
+    Modal.tabled("pages-item-modal", "Matchende genstande", ItemsTable.columns, items)
+  }
+
+
+
   object PageConnector extends WSConnector {
 
     import io.circe.generic.auto._
@@ -222,12 +254,19 @@ object Pages {
           mess.tags.foreach(tags => setTags(tags))
           mess.page.foreach(p => makeViewPageSelection(p))
           mess.errorMessage.foreach(err => showError(err))
+          println(s"Here I am with ze message")
+          mess.items.foreach(items => displayItems(items))
         }
       }
     })
 
     def requestPage(pageId : Long) : Unit = {
       val mess = ToServer.ToServerMessage(ToServer.GetPage, pageId = Some(pageId))
+      send(mess)
+    }
+
+    def executeFilter(filter : Seq[String]) : Unit = {
+      val mess = ToServer.ToServerMessage(ToServer.ExecuteFilter, tags = Some(filter))
       send(mess)
     }
 

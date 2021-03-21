@@ -5,6 +5,7 @@ import akka.stream.Materializer
 import dk.lokallykke.client.Messages.Pages._
 import dk.lokallykke.client.util.editor.Editor
 import dk.lokallykke.client.util.editor.Editor.EditorData.Block
+import dk.lokallykke.client.viewmodel.items.ViewItem
 import dk.lokallykke.client.viewmodel.pages.ViewPage
 import lokallykke.Cache
 import lokallykke.db.PageHandler
@@ -87,14 +88,12 @@ class PagesController  @Inject()(cc : ControllerComponents, site : Site)(implici
         val message = Json.parse(mess.toString).as[ToServer.ToServerMessage]
         message.messageType match {
           case ToServer.GetPage => {
-            println(s"Fetching page with ID: ${message.pageId}")
             for(
               pid <- message.pageId;
               pag <- PagesController.loadViewPags(pid, handler)
             ) {
               val tags = handler.loadTags
               val outMessage = ToClient.ToClientMessage(page = Some(pag), tags = Some(tags))
-              println(s"Sending message: ${outMessage}")
               send(outMessage)
             }
           }
@@ -110,6 +109,17 @@ class PagesController  @Inject()(cc : ControllerComponents, site : Site)(implici
               }
             }
           }
+          case ToServer.ExecuteFilter => {
+            message.tags.foreach {
+              case tags => {
+                val items = site.itemHandler.loadItemsMatchingTags(tags).sortBy(_.name)
+                val viewItems = items.map(it => ViewItem(it.id, it.instagramId, it.name, it.caption, it.registered.getTime, it.costvalue, it.askprice, Nil))
+                val mess = ToClient.ToClientMessage(items = Some(viewItems))
+                send(mess)
+              }
+            }
+          }
+          case mes => logger.info(s"Got weird message: $mes")
         }
 
       }
@@ -132,6 +142,7 @@ object PagesController {
   implicit val pageShellWrites : Writes[PageShell] = Json.writes[PageShell]
   implicit val blockWrites : Writes[Block] = Json.writes[Block]
   implicit val viewPageWrites : Writes[ViewPage] = Json.writes[ViewPage]
+  implicit val itemWrites : Writes[ViewItem] = Json.writes[ViewItem]
   implicit val toClientWrites : Writes[ToClient.ToClientMessage] = Json.writes[ToClient.ToClientMessage]
 
 

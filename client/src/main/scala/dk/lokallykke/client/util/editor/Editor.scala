@@ -1,8 +1,8 @@
 package dk.lokallykke.client.util.editor
 
 import dk.lokallykke.client.Locations
+import dk.lokallykke.client.util.JsExtensions._
 import org.scalablytyped.runtime.StringDictionary
-import org.scalablytyped.runtime.StringDictionary._
 import typings.editorjsEditorjs._
 import typings.editorjsEditorjs.anon.Config
 
@@ -35,8 +35,8 @@ object Editor {
       .setHolder(insertId)
       .setHideToolbar(false)
       .setTools(toolSettings)
+      .setData(outputDataMod.OutputData(blocks.map(_.toDataInput.asInstanceOf[outputDataMod.OutputBlockData[String,_]]).toJsArray))
     val editor = new mod.default(config)
-    blocks.foreach(bl => editor.blocks.insert(bl.blockType,bl.toDataInput))
     editor
   }
 
@@ -92,8 +92,8 @@ object Editor {
                 val ret = typ match {
                   case BlockType.Paragraph => EditorData.Block(blockType = typ.idStr, text = dat.text.toOption)
                   case BlockType.Header => EditorData.Block(blockType = typ.idStr, text = dat.text.toOption, level = dat.level.toOption)
-                  case BlockType.List => EditorData.Block(blockType = typ.idStr, items = dat.items.toOption, style = dat.style.toOption)
-                  case BlockType.Image => EditorData.Block(blockType = typ.idStr, fileUrl = dat.file.toOption.flatMap(_.url.toOption), withBorder = dat.withBackground.toOption, withBackground = dat.withBorder.toOption, stretched = dat.stretched.toOption)
+                  case BlockType.List => EditorData.Block(blockType = typ.idStr, items = dat.items.toOption.map(_.toSeq), style = dat.style.toOption)
+                  case BlockType.Image => EditorData.Block(blockType = typ.idStr, fileUrl = dat.file.toOption.flatMap(_.url.toOption), caption = dat.caption.toOption, withBorder = dat.withBackground.toOption, withBackground = dat.withBorder.toOption, stretched = dat.stretched.toOption)
                 }
                 ret
               }
@@ -149,6 +149,7 @@ object Editor {
               "file" -> js.Dynamic.literal(
                 "url" -> block.fileUrl.orUndefined
               ),
+              "caption" -> block.caption.orUndefined,
               "withBorder" -> block.withBackground.orUndefined,
               "withBackground" -> block.withBackground.orUndefined,
               "stretched" -> block.stretched.orUndefined
@@ -158,12 +159,6 @@ object Editor {
     }
   }
 
-/*
-                  case BlockType.List => EditorData.Block(blockType = typ.idStr, items = dat.items.toOption, style = dat.style.toOption)
-                  case BlockType.Image => EditorData.Block(blockType = typ.idStr, fileUrl = dat.file.toOption.flatMap(_.url.toOption), withBorder = dat.withBackground.toOption, withBackground = dat.withBorder.toOption, stretched = dat.stretched.toOption)
-
-
- */
   object ParsingObjects {
 
     trait BlockDataFile extends js.Object {
@@ -174,7 +169,7 @@ object Editor {
       def text : js.UndefOr[String]
       def level : js.UndefOr[Int]
       def style : js.UndefOr[String]
-      def items : js.UndefOr[Seq[String]]
+      def items : js.UndefOr[js.Array[String]]
       def file : js.UndefOr[BlockDataFile]
       def caption : js.UndefOr[String]
       def withBorder : js.UndefOr[Boolean]
