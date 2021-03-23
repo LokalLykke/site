@@ -9,7 +9,7 @@ import play.api.libs.json.Json
 import javax.inject.Inject
 import play.api.mvc._
 
-class AccountingController  @Inject() (cc : ControllerComponents)(implicit inSys : ActorSystem, inMat : Materializer) extends PageController(cc) {
+class AccountingController  @Inject() (cc : ControllerComponents)(implicit inSys : ActorSystem, inMat : Materializer) extends AdminController(cc) {
 
   def index = actionFrom {
     case request : Request[AnyContent] => {

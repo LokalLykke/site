@@ -20,7 +20,7 @@ import play.api.libs.json._
 import javax.inject.Inject
 import scala.util.{Failure, Success, Try}
 
-class PagesController  @Inject()(cc : ControllerComponents, site : Site)(implicit inSys : ActorSystem, inMat : Materializer) extends PageController(cc) {
+class PagesController  @Inject()(cc : ControllerComponents, site : Site)(implicit inSys : ActorSystem, inMat : Materializer) extends AdminController(cc) {
 
   val handler = site.pageHandler
 
