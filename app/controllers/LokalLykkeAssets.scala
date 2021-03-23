@@ -30,6 +30,15 @@ class LokalLykkeAssets @Inject() (val assets : controllers.Assets, cc : Controll
     }
   }
 
+  def fontFile(fontFamily : String, fileName : String) : Action[AnyContent] = {
+    assets.at(s"/fonts/$fontFamily/$fileName")
+  }
+
+  def fontLinuxLibertine = fontFile("LinuxLibertine", "LinLibertine_Re-4.1_.8_.woff")
+  def fontLinuxLibertineIt = fontFile("LinuxLibertine", "LinLibertine_It-4.0_.3_.woff")
+
+
+
 
 
 /*Action {

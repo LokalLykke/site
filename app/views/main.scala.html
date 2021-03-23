@@ -1,4 +1,4 @@
-@(title : String, headerAddOn : Html = Html(""), caller : String)(content : Html)
+@(title : String, headerAddOn : Html = Html(""), pages : Seq[(String, String)], caller : String)(content : Html)
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,11 +13,18 @@
     <nav class="navbar navbar-expand-lg navbar-light" style="background-color: #F8E8A2;" id="main-navbar">
       <div class="container-fluid">
         <a class ="navbar-brand" href="#" id="main-brand-button">
-          <img src="@controllers.routes.LokalLykkeAssets.at("images/main/brand-image.jpg")" width="100" height="100">
+          <img src="@controllers.routes.LokalLykkeAssets.at("images/main/brand-image.jpg")" width="120" height="120">
         </a>
-        <div class="collapse navbar-collapse justify-content-end">
-          Lokallykke.dk
-       </div>
+        <div class="collapse navbar-collapse justify-content-center">
+            <ul class="navbar-nav">
+                @for(pag <- pages) {
+                  <li class="nav-item mt-4 mb-2">
+                      <a class="nav-link @{if(caller == pag._1) "active" else ""}" href="@pag._2">@pag._1</a>
+                  </li>
+                }
+            </ul>
+
+        </div>
       </div>
     </nav>
     @content

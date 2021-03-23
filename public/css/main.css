@@ -1,6 +1,22 @@
-@import url('https://fonts.googleapis.com/css?family=Berkshire+Swash');
-
-html, body {
-    font-family: "Berkshire Swash";
+@font-face {
+  font-family: 'Linux Libertine';
+  font-style: normal;
+  font-weight: normal;
+  src: url('/assets/fonts/LinuxLibertine') format('woff');
 }
 
+@font-face {
+  font-family: 'Linux Libertine Italic';
+  font-style: normal;
+  font-weight: normal;
+  src: url('/assets/fonts/LinuxLibertineIt') format('woff');
+}
+
+html, body {
+    font-family: "Linux Libertine Italic";
+    font-size: 30px;
+}
+
+#main-navbar {
+  height: 130px;
+}

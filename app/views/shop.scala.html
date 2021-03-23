@@ -1,4 +1,4 @@
-@()
+@(pages : Seq[(String, String)], carouselItems : Seq[_root_.lokallykke.model.items.Item])
 
 @headerAddOn = {
   <link rel="stylesheet" media="screen" href="@controllers.routes.LokalLykkeAssets.at("css/shop.css")">
@@ -7,22 +7,31 @@
   </script>
 }
 
-@main("Butik", headerAddOn, "items") {
-  <main role="main" class="fill-vertical">
-    <div class="container-fluid fill-vertical">
-      <div class="row fill-vertical">
-        <div class="col-1 bg-light side-bar border-right no-padding" style="background-color: #e3f2fd;">
-          <div class="sidebar-sticky d-flex flex-column">
+@main("Butik", headerAddOn, pages,  "#") {
+  <main role="main">
+    <div class="container-fluid">
+      <div class="row justify-content-center">
+        <div class="col-12 clearfix">
+          <div class="carousel slide w-10" data-ride="carousel">
+            <ol class="carousel-indicators">
+              @for(it <- carouselItems.zipWithIndex) {
+                <li data-target="#carousel-indicators" data-slide-to="@it._2" class='@{if(it._2 == 0) "active"}'></li>
+              }
+            </ol>
+            <div class="carousel-inner">
+              @for(it <- carouselItems.zipWithIndex) {
+                <div class='carousel-item @{if(it._2 == 0) "active" else ""}'>
+                  <img class="d-block w-10" src = '@controllers.routes.LokalLykkeAssets.itemImage(it._1.id).url'>
+                </div>
+              }
+            </div>
+
           </div>
         </div>
-        <div class="col-11">
-          <div id="shop-content">
-          </div>
-          <div id="shop-content-sub">
-          </div>
-        </div>
+
       </div>
     </div>
   </main>
+
 
 }
