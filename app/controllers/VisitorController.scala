@@ -14,13 +14,13 @@ abstract class VisitorController @Inject()(cc : ControllerComponents)(implicit i
   protected lazy val logger = LoggerFactory.getLogger(this.getClass)
 
   def actionFrom(act : Request[AnyContent] => Result) = {
-    val composed = act.compose( {
+    val composed : Request[AnyContent] => Result = act.compose( {
       case req : Request[AnyContent] => {
         log(req);
         req
       }
     })
-    Action { act }
+    Action { composed }
   }
 
   def wsFrom(actorCreator : (ActorRef) => Actor) = WebSocket.acceptOrResult[Any, JsObject] {

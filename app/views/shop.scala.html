@@ -1,0 +1,28 @@
+@()
+
+@headerAddOn = {
+  <link rel="stylesheet" media="screen" href="@controllers.routes.LokalLykkeAssets.at("css/shop.css")">
+
+  <script type="module">
+  </script>
+}
+
+@main("Butik", headerAddOn, "items") {
+  <main role="main" class="fill-vertical">
+    <div class="container-fluid fill-vertical">
+      <div class="row fill-vertical">
+        <div class="col-1 bg-light side-bar border-right no-padding" style="background-color: #e3f2fd;">
+          <div class="sidebar-sticky d-flex flex-column">
+          </div>
+        </div>
+        <div class="col-11">
+          <div id="shop-content">
+          </div>
+          <div id="shop-content-sub">
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+}

@@ -19,7 +19,7 @@ class ShopController  @Inject()(cc : ControllerComponents, site : Site)(implicit
 
   def index = actionFrom {
     case request : Request[AnyContent] => {
-      Ok("ok")
+      Ok(views.html.shop())
     }
 
   }
