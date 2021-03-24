@@ -1,4 +1,4 @@
-@(title : String, headerAddOn : Html = Html(""), pages : Seq[(String, String)], caller : String)(content : Html)
+@(title : String, headerAddOn : Html = Html(""), pages : Seq[_root_.dk.lokallykke.client.viewmodel.customer.CustomerPage], caller : String)(content : Html)
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -19,7 +19,7 @@
             <ul class="navbar-nav">
                 @for(pag <- pages) {
                   <li class="nav-item mt-4 mb-2">
-                      <a class="nav-link @{if(caller == pag._1) "active" else ""}" href="@pag._2">@pag._1</a>
+                      <a class="nav-link @{if(caller == pag.name) "active" else ""}" href="@pag.pageUrl">@pag.name</a>
                   </li>
                 }
             </ul>

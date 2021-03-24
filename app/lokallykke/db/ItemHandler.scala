@@ -19,8 +19,8 @@ trait ItemHandler {
 
   val tables : Tables
   lazy val items = tables.Items.items
-  lazy val tags = tables.Items.tags
-  lazy val liveItems = items.filter(_.deletedAt.isEmpty)
+  private lazy val tags = tables.Items.tags
+  private lazy val liveItems = items.filter(_.deletedAt.isEmpty)
   private implicit val dt = 30.seconds
 
   def existingInstagramIds(seq : Seq[Item]) : Set[String]

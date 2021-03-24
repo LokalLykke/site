@@ -1,5 +1,5 @@
 package lokallykke.structure
-import lokallykke.db.{Connection, ItemHandler, PageHandler}
+import lokallykke.db.{Connection, CustomerPageHandler, ItemHandler, PageHandler}
 import play.api.inject.Binding
 import play.api.{Configuration, Environment}
 
@@ -11,7 +11,11 @@ class ProductionSite extends Site {
 
   override def pageHandler: PageHandler = Connection.h2handler
 
+  override def customerPageHandler: CustomerPageHandler = Connection.h2handler
+
   override def bindings(environment: Environment, configuration: Configuration): collection.Seq[Binding[_]] = Seq(
     bind[Site].toInstance(this)
   )
+
+
 }

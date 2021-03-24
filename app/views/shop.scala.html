@@ -1,4 +1,4 @@
-@(pages : Seq[(String, String)], carouselItems : Seq[_root_.lokallykke.model.items.Item])
+@(pages : Seq[_root_.dk.lokallykke.client.viewmodel.customer.CustomerPage], carouselItems : Seq[_root_.lokallykke.model.items.Item])
 
 @headerAddOn = {
   <link rel="stylesheet" media="screen" href="@controllers.routes.LokalLykkeAssets.at("css/shop.css")">
@@ -8,26 +8,48 @@
 }
 
 @main("Butik", headerAddOn, pages,  "#") {
-  <main role="main">
-    <div class="container-fluid">
-      <div class="row justify-content-center">
-        <div class="col-12 clearfix">
-          <div class="carousel slide w-10" data-ride="carousel">
+  <main role="main" class="mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col align-self-center">
+          <div id="shop-carousel" class="carousel" data-ride="carousel">
             <ol class="carousel-indicators">
               @for(it <- carouselItems.zipWithIndex) {
-                <li data-target="#carousel-indicators" data-slide-to="@it._2" class='@{if(it._2 == 0) "active"}'></li>
+                <li data-target="#shop-carousel" data-slide-to="@it._2" class='@{if(it._2 == 0) "active"}'></li>
               }
             </ol>
             <div class="carousel-inner">
               @for(it <- carouselItems.zipWithIndex) {
                 <div class='carousel-item @{if(it._2 == 0) "active" else ""}'>
-                  <img class="d-block w-10" src = '@controllers.routes.LokalLykkeAssets.itemImage(it._1.id).url'>
+                  <img class="d-block" src = '@controllers.routes.LokalLykkeAssets.itemImage(it._1.id).url'>
+                  <div class="carousel-caption d-none d-md-block">
+                    <h6>@{it._1.caption.getOrElse("")}</h6>
+                  </div>
                 </div>
               }
             </div>
-
+            <a class="carousel-control-prev" href="#shop-carousel" role="button" data-slide="prev">
+              <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+              <span class="sr-only">Previous</span>
+            </a>
+            <a class="carousel-control-next" href="#shop-carousel" role="button" data-slide="next">
+              <span class="carousel-control-next-icon" aria-hidden="true"></span>
+              <span class="sr-only">Next</span>
+            </a>
           </div>
         </div>
+      </div>
+      <div class="row row-cols-5 mt-5">
+          @for(pag <- pages){
+        <div class="col">
+            <div class='card'>
+              <img src='@pag.imageUrl' class='card-image-top'>
+              <div class='card-body'>
+                <p class="card-text">@pag.name</p>
+              </div>
+            </div>
+        </div>
+       }
 
       </div>
     </div>

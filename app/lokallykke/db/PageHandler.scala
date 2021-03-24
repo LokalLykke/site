@@ -14,12 +14,12 @@ trait PageHandler {
   val db : Database
   private implicit val dt = 30.seconds
   val tables : Tables
-  lazy val images = tables.Pages.images
-  lazy val pages = tables.Pages.pages
-  lazy val pageTags = tables.Pages.pageTags
-  lazy val pageContent = tables.Pages.pageContent
-  lazy val contentItems = tables.Pages.contentItems
-  lazy val itemTags = tables.Items.tags
+  private lazy val images = tables.Pages.images
+  private lazy val pages = tables.Pages.pages
+  private lazy val pageTags = tables.Pages.pageTags
+  private lazy val pageContent = tables.Pages.pageContent
+  private lazy val contentItems = tables.Pages.contentItems
+  private lazy val itemTags = tables.Items.tags
 
   lazy val insertImage = images.returning(images.map(_.id)).into((img, pid) => img.copy(id = pid))
   lazy val insertPage = pages.returning(pages.map(_.id)).into((pag, pid) => pag.copy(id = pid))

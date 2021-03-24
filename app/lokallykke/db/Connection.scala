@@ -24,7 +24,7 @@ object Connection {
 
 
 
-  class H2Handler extends Tables with ItemHandler with PageHandler {
+  class H2Handler extends Tables with ItemHandler with PageHandler with CustomerPageHandler {
     import slick.jdbc.H2Profile.api._
     private implicit val dt = 30.seconds
 
