@@ -73,7 +73,7 @@ trait CustomerPageHandler {
       case pag => {
         val imageUrl = (imageByContent.get(pag.id), imagedPages.get(pag.id)) match {
           case (Some(imgId), _) => controllers.routes.PagesController.loadImage(imgId).url
-          case (_, Some(imgId)) => controllers.routes.LokalLykkeAssets.itemImage(imgId).url
+          case (_, Some(imgId)) => controllers.routes.LokalLykkeAssets.croppedItemImage(imgId).url
           case _ => controllers.routes.LokalLykkeAssets.at("images/no-image.jpg").url
         }
         CustomerPage(pag.id, pag.name, "#", pag.description.getOrElse(pag.name), imageUrl)

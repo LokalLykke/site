@@ -1,6 +1,7 @@
 GET     /shop                                   controllers.ShopController.index()
 
 GET     /items/itemimage                        controllers.LokalLykkeAssets.itemImage(itemId : Long)
+GET     /items/croppeditemimage                 controllers.LokalLykkeAssets.croppedItemImage(itemId : Long, height : Int = 1000, width : Int = 800)
 GET     /items/ws                               controllers.ItemsController.socket
 +nocsrf
 POST    /items/upload                           controllers.ItemsController.upload
@@ -18,6 +19,9 @@ POST    /saveimage                              controllers.PagesController.save
 
 GET     /assets/fonts/LinuxLibertine            controllers.LokalLykkeAssets.fontLinuxLibertine
 GET     /assets/fonts/LinuxLibertineIt          controllers.LokalLykkeAssets.fontLinuxLibertineIt
+GET     /assets/fonts/Farro                     controllers.LokalLykkeAssets.fontFarro
+GET     /assets/fonts/AmaticSC                  controllers.LokalLykkeAssets.fontAmatic
+
 GET     /assets/jslibrary.js                    controllers.LokalLykkeAssets.jsLibrary()
 GET     /assets/client-fastopt-bundle.js.map    controllers.LokalLykkeAssets.jsLibraryMap()
 GET     /assets/*file                           controllers.LokalLykkeAssets.at(file)

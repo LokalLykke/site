@@ -1,0 +1,10 @@
+.carousel-item{
+  height:500px;
+  width:800px;
+  background-size:cover;
+  background-position: center center;
+}
+
+.card {
+  border: none;
+}

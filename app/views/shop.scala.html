@@ -39,7 +39,7 @@
           </div>
         </div>
       </div>
-      <div class="row row-cols-5 mt-5">
+      <!--div-- class="row row-cols-5 mt-5">
           @for(pag <- pages){
         <div class="col">
             <div class='card'>
@@ -50,8 +50,23 @@
             </div>
         </div>
        }
-
+      </div-->
+      <div class="row mt-5">
+        <div class="col align-self-center">
+          <div class="card-deck">
+            @for(pag <- pages){
+            <div class='card' style="width: 18rem;">
+              <img src='@pag.imageUrl' class='card-image-top fixed-card-image'>
+              <div class='card-body'>
+                <p class="card-text">@pag.name</p>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
       </div>
+
+
     </div>
   </main>
 

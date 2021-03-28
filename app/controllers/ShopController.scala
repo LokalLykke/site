@@ -19,7 +19,6 @@ class ShopController  @Inject()(cc : ControllerComponents, site : Site)(implicit
 
   def index = actionFrom {
     case request : Request[AnyContent] => {
-      println("Don did loaded")
       val pages = site.customerPageHandler.loadCustomerPages
       val carouselItems = site.itemHandler.loadItemsMatchingTags(List("forside"))
       Ok(views.html.shop(pages, carouselItems))
