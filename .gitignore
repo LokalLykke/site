@@ -26,3 +26,5 @@ info.txt
 /client/target/
 /RUNNING_PID
 /node_modules/
+/test/ExploreByensBazarLogon.scala
+/test/ExploreKirppuLogon.scala

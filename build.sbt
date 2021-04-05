@@ -10,13 +10,15 @@ lazy val root = (project in file("."))
     pipelineStages in Assets := Seq(scalaJSPipeline),
     compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
     libraryDependencies ++= Seq(
+      ws,
       guice,
       "org.webjars" % "bootstrap" % "4.6.0",
       "org.webjars" % "jquery" % "3.5.1",
       "org.webjars" % "requirejs" % "2.3.6",
       "com.typesafe.slick" %% "slick" % "3.3.2",
       "com.zaxxer" % "HikariCP" % "2.4.2",
-      "com.h2database" % "h2" % "1.4.200"
+      "com.h2database" % "h2" % "1.4.200",
+      "org.jsoup" % "jsoup" % "1.13.1"
     ),
     resourceGenerators in Compile += Def.task {
       val clientTarget = ( fastLinkJS in Compile in client).value.data

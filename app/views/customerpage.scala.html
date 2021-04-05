@@ -1,0 +1,69 @@
+@(pages : Seq[_root_.dk.lokallykke.client.viewmodel.customer.CustomerPage], page : _root_.dk.lokallykke.client.viewmodel.customer.CustomerPage, contents : Seq[_root_.dk.lokallykke.client.viewmodel.customer.CustomerPageContent])
+
+@headerAddOn = {
+  <link rel="stylesheet" media="screen" href="@controllers.routes.LokalLykkeAssets.at("css/customerpage.css")">
+  <script type="module">
+  </script>
+}
+
+@main(page.name, headerAddOn, pages,  "#") {
+  <main role="main" class="mt-5">
+    <div class="container">
+      <div class="row">
+        <div class="col align-self-center">
+          <h1>@{page.name}</h1>
+        </div>
+      </div>
+      <div class="row">
+        <div class="col align-self-center">
+          <h2>@{page.caption}</h2>
+        </div>
+      </div>
+
+
+      <div class="row">
+        <div class="col align-self-center">
+          @for(cont <- contents){
+            @(cont.header, cont.imageUrl, cont.paragraph, cont.orderedList, cont.unOrderedList) match {
+               case (Some(p),_,_,_,_) => { <p class="h@{p._2}">@{p._1}</p> }
+               case (_,Some(imgUrl),_,_,_) => { <img src="@imgUrl" class="img-fluid"> }
+               case (_,_,Some(paragraph),_,_) => { <p class="text-justify">@paragraph</p> }
+               case (_,_,_,Some(lis),_) => { <ol>@for(it <- lis){<li>@it</li>}</ol> }
+               case (_,_,_,_,Some(lis)) => { <ul>@for(it <- lis){<li>@it</li>}</ul> }
+            }
+          }
+        </div>
+      </div>
+      <!--div-- class="row row-cols-5 mt-5">
+          @for(pag <- pages){
+        <div class="col">
+            <div class='card'>
+              <img src='@pag.imageUrl' class='card-image-top'>
+              <div class='card-body'>
+                <p class="card-text">@pag.name</p>
+              </div>
+            </div>
+        </div>
+       }
+      </div-->
+      <div class="row mt-5">
+        <div class="col align-self-center">
+          <div class="card-deck">
+            @for(pag <- pages){
+            <div class='card' style="width: 18rem;">
+              <img src='@pag.imageUrl' class='card-image-top fixed-card-image'>
+              <div class='card-body'>
+                <p class="card-text">@pag.name</p>
+              </div>
+            </div>
+            }
+          </div>
+        </div>
+      </div>
+
+
+    </div>
+  </main>
+
+
+}

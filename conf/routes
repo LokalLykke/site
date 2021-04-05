@@ -1,4 +1,5 @@
 GET     /shop                                   controllers.ShopController.index()
+GET     /page/:pageId                           controllers.CustomerPageController.page(pageId : Long)
 
 GET     /items/itemimage                        controllers.LokalLykkeAssets.itemImage(itemId : Long)
 GET     /items/croppeditemimage                 controllers.LokalLykkeAssets.croppedItemImage(itemId : Long, height : Int = 1000, width : Int = 800)
@@ -21,6 +22,8 @@ GET     /assets/fonts/LinuxLibertine            controllers.LokalLykkeAssets.fon
 GET     /assets/fonts/LinuxLibertineIt          controllers.LokalLykkeAssets.fontLinuxLibertineIt
 GET     /assets/fonts/Farro                     controllers.LokalLykkeAssets.fontFarro
 GET     /assets/fonts/AmaticSC                  controllers.LokalLykkeAssets.fontAmatic
+GET     /assets/fonts/Coda                      controllers.LokalLykkeAssets.fontCoda
+
 
 GET     /assets/jslibrary.js                    controllers.LokalLykkeAssets.jsLibrary()
 GET     /assets/client-fastopt-bundle.js.map    controllers.LokalLykkeAssets.jsLibraryMap()

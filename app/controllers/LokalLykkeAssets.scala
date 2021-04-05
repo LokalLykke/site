@@ -64,6 +64,7 @@ class LokalLykkeAssets @Inject() (val assets : controllers.Assets, cc : Controll
   def fontLinuxLibertineIt = fontFile("LinuxLibertine", "LinLibertine_It-4.0_.3_.woff")
   def fontFarro = fontFile("Farro", "Farro-regular.ttf")
   def fontAmatic = fontFile("AmaticSC", "AmaticSC-Regular.ttf")
+  def fontCoda = fontFile("Coda", "Coda-Regular.ttf")
 
 
 

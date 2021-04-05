@@ -1,6 +1,6 @@
 package lokallykke.db
 
-import dk.lokallykke.client.viewmodel.customer.CustomerPage
+import dk.lokallykke.client.viewmodel.customer.{CustomerPage, CustomerPageContent}
 import org.slf4j.LoggerFactory
 import slick.jdbc.JdbcProfile
 
@@ -24,6 +24,7 @@ trait CustomerPageHandler {
   private lazy val pages = tables.Pages.pages
   private lazy val pageTags = tables.Pages.pageTags
   private lazy val pageContent = tables.Pages.pageContent
+  private lazy val pageContentItems = tables.Pages.contentItems
   private lazy val pageImages = tables.Pages.images
 
   private lazy val livePages = pages.filter(_.isdeleted === 0)
@@ -76,11 +77,34 @@ trait CustomerPageHandler {
           case (_, Some(imgId)) => controllers.routes.LokalLykkeAssets.croppedItemImage(imgId).url
           case _ => controllers.routes.LokalLykkeAssets.at("images/no-image.jpg").url
         }
-        CustomerPage(pag.id, pag.name, "#", pag.description.getOrElse(pag.name), imageUrl)
+        CustomerPage(pag.id, pag.name, controllers.routes.CustomerPageController.page(pag.id).url, pag.description.getOrElse(pag.name), imageUrl)
       }
     }
 
   }
+
+  def loadCustomerPageAndContent(pageId : Long) = {
+    loadCustomerPages.find(_.id == pageId).map {
+      case pag => {
+        val contents = Await.result(db.run(pageContent.filter(_.pageid === pageId).result), dt)
+        val contentListQuery = (pageContentItems join pageContent.filter(_.pageid === pageId) on  {_.contentid === _.id}).map(_._1)
+        val contentListItems = Await.result(db.run(contentListQuery.result), dt).groupBy(_.pageContentId).map {
+          case (cid, ents) => cid -> ents.sortBy(_.indx).map(_.text)
+        }
+        val customerCont = contents.sortBy(_.indx).map {
+          case cont => CustomerPageContent(
+            cont.level.map(lev => (cont.text.getOrElse(""), lev)),
+            cont.imageid.map(imid => controllers.routes.PagesController.loadImage(imid).url),
+            cont.text.filter(_ => cont.contenttype == "paragraph"),
+            contentListItems.get(cont.id).filter(_ => cont.style == "ordered"),
+            contentListItems.get(cont.id).filter(_ => cont.style != "ordered")
+          )
+        }
+        (pag, customerCont)
+      }
+    }
+  }
+
 }
 
 

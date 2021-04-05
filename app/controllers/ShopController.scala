@@ -13,15 +13,14 @@ import play.api.mvc._
 import javax.inject.Inject
 import scala.util.{Failure, Success, Try}
 
-class ShopController  @Inject()(cc : ControllerComponents, site : Site)(implicit inSys : ActorSystem, inMat : Materializer) extends VisitorController(cc) {
+class ShopController  @Inject()(cc : ControllerComponents, site : Site)(implicit inSys : ActorSystem, inMat : Materializer) extends VisitorController(cc, site) {
 
   val handler = site.pageHandler
 
   def index = actionFrom {
     case request : Request[AnyContent] => {
-      val pages = site.customerPageHandler.loadCustomerPages
       val carouselItems = site.itemHandler.loadItemsMatchingTags(List("forside"))
-      Ok(views.html.shop(pages, carouselItems))
+      Ok(views.html.shop(super.customerPages, carouselItems))
     }
 
   }

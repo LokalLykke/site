@@ -12,6 +12,13 @@
   src: url('/assets/fonts/LinuxLibertineIt') format('woff');
 }
 
+@font-face {
+  font-family: 'Coda regular';
+  font-style: normal;
+  font-weight: normal;
+  src: url('/assets/fonts/CodaRegular') format('ttf');
+}
+
 html, body {
     font-family: "Linux Libertine Italic";
     font-size: 30px;
