@@ -1,6 +1,6 @@
 package lokallykke.db
 
-import dk.lokallykke.client.viewmodel.customer.{CustomerPage, CustomerPageContent}
+import dk.lokallykke.client.viewmodel.customer.{CustomerItem, CustomerPage, CustomerPageContent}
 import org.slf4j.LoggerFactory
 import slick.jdbc.JdbcProfile
 
@@ -100,8 +100,18 @@ trait CustomerPageHandler {
             contentListItems.get(cont.id).filter(_ => cont.style != "ordered")
           )
         }
-        (pag, customerCont)
+        val items = loadItemsForPage(pag.id)
+
+        (pag, customerCont, items)
       }
+    }
+  }
+
+  def loadItemsForPage(id : Long) = {
+    val itIdQuery = (pageTags.filter(_.pageid === id) join itemTags on {_.tagname === _.tagname}).map(_._2.itemid).distinct
+    val query = (liveItems join itIdQuery on {_.id === _}).map(_._1)
+    Await.result(db.run(query.result), dt).map {
+      case it => CustomerItem(it.id, it.name.getOrElse(""), it.caption, controllers.routes.LokalLykkeAssets.cardItemImage(it.id).url)
     }
   }
 

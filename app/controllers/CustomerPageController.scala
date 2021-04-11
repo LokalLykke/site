@@ -18,8 +18,8 @@ class CustomerPageController  @Inject()(cc : ControllerComponents, site : Site)(
     case request : Request[AnyContent] => {
       site.customerPageHandler.loadCustomerPageAndContent(pageId) match {
         case None => NotFound
-        case Some((pag, conts)) => {
-          Ok(views.html.customerpage(super.customerPages, pag, conts))
+        case Some((pag, conts, items)) => {
+          Ok(views.html.customerpage(super.customerPages, pag, conts, items))
         }
       }
     }

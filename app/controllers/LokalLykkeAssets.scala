@@ -56,6 +56,8 @@ class LokalLykkeAssets @Inject() (val assets : controllers.Assets, cc : Controll
     }
   }
 
+  def cardItemImage(itemId : Long) = croppedItemImage(itemId, 100, 100)
+
   def fontFile(fontFamily : String, fileName : String) : Action[AnyContent] = {
     assets.at(s"/fonts/$fontFamily/$fileName")
   }
@@ -65,6 +67,7 @@ class LokalLykkeAssets @Inject() (val assets : controllers.Assets, cc : Controll
   def fontFarro = fontFile("Farro", "Farro-regular.ttf")
   def fontAmatic = fontFile("AmaticSC", "AmaticSC-Regular.ttf")
   def fontCoda = fontFile("Coda", "Coda-Regular.ttf")
+  def fontTangerine = fontFile("Tangerine", "Tangerine-Bold.ttf")
 
 
 

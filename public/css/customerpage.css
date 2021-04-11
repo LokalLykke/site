@@ -1,3 +1,13 @@
 .card {
   border: none;
 }
+
+.page-name-header {
+  font-family:"Tangerine";
+  font-size:72px;
+}
+
+.lead {
+  font-family:"Tangerine";
+  font-size:36px;
+}
