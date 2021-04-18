@@ -29,7 +29,7 @@ object Messages {
     import dk.lokallykke.client.viewmodel.items._
 
     object ToServer {
-      case class ToServerMessage(messageType : String, viewItem : Option[ViewItem] = None, itemId : Option[Long] = None, instagramItem: Option[InstagramItem] = None)
+      case class ToServerMessage(messageType : String, viewItem : Option[ViewItem] = None, itemId : Option[Long] = None, instagramItem: Option[InstagramItem] = None, allInstagramItems : Option[Seq[InstagramItem]] = None)
 
       val UpdateItem = "UpdateItem"
       val UpdateItemAndLoad = "UpdateItemAndLoad"
@@ -38,6 +38,7 @@ object Messages {
       val DeleteItemAndLoad = "DeleteItemAndLoad"
       val LoadInstagramItems = "LoadInstagramItems"
       val CreateInstagramItem = "CreateInstagramItem"
+      val CreateAllInstagramItems = "CreateAllInstagramItems"
 
       case class InstagramItem(instagramId : String, name : Option[String], caption : Option[String], costValue : Option[Double], askPrice : Option[Double], tags : Seq[String])
 
@@ -45,7 +46,8 @@ object Messages {
 
     object ToClient {
       case class ToClientMessage(items : Option[Seq[ViewItem]] = None, uploadResult : Option[Seq[FileUploadResult]] = None, instagramUpdate : Option[String] = None,
-                                 instagramResults: Option[Seq[InstagramResult]] = None, uploadedInstagramItem : Option[String] = None, tagOptions : Option[Seq[String]] = None)
+                                 instagramResults: Option[Seq[InstagramResult]] = None, uploadedInstagramItem : Option[String] = None, tagOptions : Option[Seq[String]] = None,
+                                 insertedAllInstagramItems : Option[Boolean] = None)
 
       case class FileUploadResult(id : Long, fileName : Option[String], success : Boolean)
       case class InstagramResult(instagramId : String, caption : Option[String], bytes : Array[Byte], fileType : String, tags : Seq[String])

@@ -3,7 +3,7 @@ package lokallykke
 object Cache {
   object InstagramImages {
     private val lockObject = "lock"
-    val MaxImages = 20
+    val MaxImages = 500
     private var currentIds : List[String] = Nil
     private var imageMap = Map.empty[String, Array[Byte]]
 

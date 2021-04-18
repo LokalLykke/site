@@ -56,7 +56,7 @@ class LokalLykkeAssets @Inject() (val assets : controllers.Assets, cc : Controll
     }
   }
 
-  def cardItemImage(itemId : Long) = croppedItemImage(itemId, 100, 100)
+  def cardItemImage(itemId : Long) = itemImage(itemId)
 
   def fontFile(fontFamily : String, fileName : String) : Action[AnyContent] = {
     assets.at(s"/fonts/$fontFamily/$fileName")

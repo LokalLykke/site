@@ -108,11 +108,23 @@ class ItemsController  @Inject()(cc : ControllerComponents, site : Site)(implici
               case item => {
                 Cache.InstagramImages.pop(item.instagramId).foreach {
                   case bytes => {
-                    site.itemHandler.createItem(Some(item.instagramId), bytes, item.name, item.caption, item.costValue, item.askPrice)
+                    site.itemHandler.createItem(Some(item.instagramId), bytes, item.name, item.caption, item.costValue, item.askPrice, tagsOpt = Some(item.tags))
                     val mess = ToClient.ToClientMessage(uploadedInstagramItem = Some(item.instagramId))
                     out ! Json.toJson(mess)
                   }
                 }
+              }
+            }
+          }
+          case ToServer.CreateAllInstagramItems => {
+            message.allInstagramItems.foreach {
+              case items => {
+                for(
+                  item <- items;
+                  bytes <- Cache.InstagramImages.pop(item.instagramId)
+                ) site.itemHandler.createItem(Some(item.instagramId), bytes, item.name, item.caption, item.costValue, item.askPrice, tagsOpt = Some(item.tags))
+                val mess = ToClient.ToClientMessage(insertedAllInstagramItems = Some(true))
+                out ! Json.toJson(mess)
               }
             }
           }
@@ -126,6 +138,7 @@ class ItemsController  @Inject()(cc : ControllerComponents, site : Site)(implici
         case Failure(err) => logger.error(s"During reception of message: $mess", err)
       }
     }
+
 
     override def pingOut: ActorRef = out
 

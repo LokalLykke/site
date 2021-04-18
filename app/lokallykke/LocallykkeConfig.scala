@@ -16,5 +16,11 @@ object LocallykkeConfig {
 
   }
 
+  object Instagram {
+    lazy val instaConfig = config.getConfig("instagram")
+    lazy val user = instaConfig.getString("user")
+    lazy val password = instaConfig.getString("password")
+  }
+
 
 }

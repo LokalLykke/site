@@ -11,9 +11,9 @@ object ExploreItemHandling {
   private implicit val dt = 30.seconds
 
   def main(args: Array[String]): Unit = {
-    val handler = Connection.h2handler
-    handler.createItemTables(handler.db)
-
+    val resp = InstagramLoader.parseResponse
+    println(s"Parsed: ${resp.size} posts")
+    resp.foreach(it => println(it))
 
   }
 

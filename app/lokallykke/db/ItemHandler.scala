@@ -41,10 +41,15 @@ trait ItemHandler {
     Await.result(db.run(insertAndReturnItem += insertee), dt)
   }
 
-  def createItem(instagramId : Option[String], image : Array[Byte], name : Option[String], caption : Option[String], costVal : Option[Double], askPrice : Option[Double]) : Item = {
+  def createItem(instagramId : Option[String], image : Array[Byte], name : Option[String], caption : Option[String], costVal : Option[Double], askPrice : Option[Double], tagsOpt : Option[Seq[String]] = None) : Item = {
     val insertee = Item(-1L, instagramId, name, image, None, None, caption, new Timestamp(System.currentTimeMillis),costVal, None, None, None, askPrice)
-    Await.result(db.run(insertAndReturnItem += insertee), dt)
-
+    val ret = Await.result(db.run(insertAndReturnItem += insertee), dt)
+    tagsOpt.filter(_.size > 0).foreach {
+      case ts => {
+        Await.result(db.run(tags ++= ts.distinct.map(t => ItemTag(ret.id, t))), dt)
+      }
+    }
+    ret
   }
 
   def changeImage(itemId : Long, bytes : Array[Byte], width : Option[Int], height : Option[Int]): Unit = {

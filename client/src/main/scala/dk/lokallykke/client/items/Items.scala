@@ -36,6 +36,7 @@ object Items {
   val ItemsFromInstagramId = "items-nav-instagram"
   val ItemsFileInputId = "items-files-input"
   val ItemsInstagramTextareaId = "items-instagram-textarea"
+  val ItemsUploadAllButtonId = "items-upload-all"
 
   var uploadedFiles = Seq.empty[UploadedFile]
   var instagramItems = Seq.empty[InstagramItem]
@@ -198,6 +199,16 @@ object Items {
 
       def show() : Unit = {
         clearContent()
+        if(instagramItems.size > 0) {
+          $(s"#$ItemsContentSubId").append(
+            $(s"<button id='$ItemsUploadAllButtonId' class='btn btn-primary my-2'>").text("Upload alle")
+          )
+          $(s"#$ItemsUploadAllButtonId").click((obj : JQueryEventObject) => {
+            val mapped = instagramItems.map(it => ToServer.InstagramItem(it.instagramId, it.name, it.caption, it.costValue, it.askPrice, it.tags))
+            ItemsConnector.send(ToServerMessage(ToServer.CreateAllInstagramItems, allInstagramItems = Some(mapped.toList)))
+          })
+
+        }
         val tab = tableBuilder.buildTable(instagramItems)
         $(s"#$ItemsContentSubId").append(tab)
       }
@@ -409,6 +420,11 @@ object Items {
           mess.tagOptions.foreach {
             case opts => {
               availableTags = opts
+            }
+          }
+          mess.insertedAllInstagramItems.filter(x => x).foreach {
+            case _ => {
+              $(s"#$ItemsNavOnStockId").click()
             }
           }
         }
