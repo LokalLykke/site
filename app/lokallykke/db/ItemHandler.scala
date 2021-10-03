@@ -90,12 +90,15 @@ trait ItemHandler {
   }
 
   def loadTagsFor(itemids : Seq[Long]) : Seq[ItemTag] = {
-    val query = itemids.grouped(500).map(grp => tags.filter(t => t.itemid.inSetBind(grp))).reduce(_ union _)
-    Await.result(db.run(query.result), dt)
+    if(itemids.isEmpty) Nil
+    else {
+      val query = itemids.grouped(500).map(grp => tags.filter(t => t.itemid.inSetBind(grp))).reduce(_ union _)
+      Await.result(db.run(query.result), dt)
+    }
   }
 
   def loadDistinctTags : Seq[String] = {
-    Await.result(db.run(tags.map(_.tagname).distinct.sortBy(x => x).result), dt)
+    Await.result(db.run(tags.map(_.tagname).groupBy(x => x).map(_._1).sortBy(x => x).result), dt)
   }
 
   def updateTagsFor(itemId : Long, tagnames : Seq[String]) = {

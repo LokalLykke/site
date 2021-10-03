@@ -18,7 +18,9 @@ lazy val root = (project in file("."))
       "com.typesafe.slick" %% "slick" % "3.3.2",
       "com.zaxxer" % "HikariCP" % "2.4.2",
       "com.h2database" % "h2" % "1.4.200",
-      "org.jsoup" % "jsoup" % "1.13.1"
+      "org.postgresql" % "postgresql" % "42.2.24",
+      "org.jsoup" % "jsoup" % "1.13.1",
+      "com.google.api-client" % "google-api-client" % "1.32.1"
     ),
     resourceGenerators in Compile += Def.task {
       val clientTarget = ( fastLinkJS in Compile in client).value.data

@@ -157,7 +157,7 @@ object ItemsController {
   implicit val instagramResultWrites : Writes[ToClient.InstagramResult] = Json.writes[ToClient.InstagramResult]
   implicit val messWrites : Writes[ToClient.ToClientMessage] = Json.writes[ToClient.ToClientMessage]
 
-  def loadItems(handler : ItemHandler, includeSold : Boolean) = {
+  def loadItems(handler : ItemHandler, includeSold : Boolean) =  {
     val items = handler.loadItems(includeSold)
     val tags = handler.loadTagsFor(items.map(_.id)).groupBy(_.itemid).map(p => p._1 -> p._2.sortBy(_.tag).map(_.tag))
     items.map {
