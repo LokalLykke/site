@@ -2,6 +2,7 @@ package lokallykke.db
 
 import lokallykke.model.items.{Item, ItemTag}
 import lokallykke.model.pages.{Image, Page, PageContent, PageContentItem, PageTag}
+import lokallykke.model.session.UserSession
 import org.slf4j.LoggerFactory
 import slick.jdbc.JdbcProfile
 
@@ -18,15 +19,23 @@ trait Tables {
   def createItemTables(db : Database)(implicit duration: Duration) = {
     val schema = Items.schema
     logger.info(s"Will create schema based on following DML")
-    schema.createIfNotExistsStatements.foreach(stat => logger.info(stat))
-    Await.result(db.run(schema.createIfNotExists),duration)
+    schema.createStatements.foreach(stat => logger.info(stat))
+    Await.result(db.run(schema.create),duration)
   }
   def createPageTables(db : Database)(implicit duration: Duration) = {
     val schema = Pages.schema
     logger.info(s"Will create schema based on following DML")
-    schema.createIfNotExistsStatements.foreach(stat => logger.info(stat))
-    Await.result(db.run(schema.createIfNotExists),duration)
+    schema.createStatements.foreach(stat => logger.info(stat))
+    Await.result(db.run(schema.create),duration)
   }
+
+  def createUserSessionTables(db : Database)(implicit duration: Duration) = {
+    val schema = Session.schema
+    logger.info(s"Will create schema based on following DML")
+    schema.createStatements.foreach(stat => logger.info(stat))
+    Await.result(db.run(schema.create),duration)
+  }
+
 
 
   object Items {
@@ -134,6 +143,27 @@ trait Tables {
       def pk = primaryKey("PK_PAGECONTIT", (contentid, indx))
       def fkCont = foreignKey("FK_PAGECONTIT", (contentid), pageContent)(_.id, onDelete = ForeignKeyAction.Cascade)
     }
+
+  }
+
+  object Session {
+
+    val sessions = TableQuery[UserSessionTable]
+
+    val schema = sessions.schema
+
+    class UserSessionTable(tag : Tag) extends Table[UserSession](tag, "USERSESSION"){
+      def sessionid = column[Long]("SESSIONID", O.PrimaryKey)
+      def email = column[Option[String]]("EMAIL")
+      def authenticated = column[Int]("AUTHENTICATED")
+      def state = column[Option[String]]("SIGNINSTATE")
+      def nonce = column[Option[String]]("SIGNINNONCE")
+      def expires = column[Option[Timestamp]]("EXPIRES")
+
+      def * = (sessionid, email, authenticated, state, nonce, expires) <> (UserSession.tupled, UserSession.unapply)
+
+    }
+
 
   }
 

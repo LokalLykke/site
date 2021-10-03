@@ -14,7 +14,18 @@ abstract class AdminController @Inject()(cc : ControllerComponents)(implicit inS
   protected lazy val logger = LoggerFactory.getLogger(this.getClass)
 
   def actionFrom(act : Request[AnyContent] => Result) = {
-    Action { act }
+    Action {
+      act }
+  }
+
+  def authenticate : Request[AnyContent] => Option[Result] = {
+    case request: Request[AnyContent] => request.cookies.get(AdminController.AdminSessionCookie) match {
+      case Some(cook) if cook.value.matches("^[0-9]+$") => {
+        val sessionId = cook.value.toLong
+
+      }
+    }
+
   }
 
   def wsFrom(actorCreator : (ActorRef) => Actor) = WebSocket.acceptOrResult[Any, JsObject] {
@@ -26,7 +37,11 @@ abstract class AdminController @Inject()(cc : ControllerComponents)(implicit inS
       }
     }
   }
+}
 
+object AdminController {
 
+  val AdminSessionCookie = "LLADMSESSIONID"
 
 }
+
