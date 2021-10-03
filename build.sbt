@@ -6,6 +6,8 @@ lazy val root = (project in file("."))
   .settings(commonSettings)
   .settings(
     name := """lokallykke-site""",
+    //ThisBuild / libraryDependencySchemes += "org.scala-lang.modules" %% "scala-java8-compat" % VersionScheme.Always,
+    //evictionRules += "org.scala-lang.modules" %% "scala-java8-compat" % VersionScheme.Always,
     scalaJSProjects := Seq(client),
     pipelineStages in Assets := Seq(scalaJSPipeline),
     compile in Compile := ((compile in Compile) dependsOn scalaJSPipeline).value,
@@ -40,12 +42,12 @@ lazy val client = (project in file("client"))
   .settings(commonSettings)
   .settings(
     libraryDependencies ++= Seq(
-      "org.scala-js" %%% "scalajs-dom" % "1.1.0",
+      "org.scala-js" %%% "scalajs-dom" % "1.2.0",
       "io.circe" %%% "circe-core" % circeVersion,
       "io.circe" %%% "circe-generic" % circeVersion,
       "io.circe" %%% "circe-parser" % circeVersion,
       "io.circe" %% "circe-generic-extras" % circeVersion,
-      "org.querki" %%% "jquery-facade" % "2.0",
+      "org.querki" %%% "jquery-facade" % "2.0" excludeAll(ExclusionRule(organization = "org.scala-js")),
       "io.github.cquiroz" %%% "locales-minimal-en-db" % "1.1.1",
       "io.github.cquiroz" %%% "scala-java-time" % "2.2.0"
     ),
