@@ -4,12 +4,16 @@ import akka.actor.{Actor, ActorRef, ActorSystem}
 import akka.stream.Materializer
 import dk.lokallykke.client.viewmodel.accounting.{ToClientMessage, ToServerMessage}
 import lokallykke.scheduled.Pingable
+import lokallykke.structure.Site
 import play.api.libs.json.Json
+import play.api.libs.ws.WSClient
 
 import javax.inject.Inject
 import play.api.mvc._
 
-class AccountingController  @Inject() (cc : ControllerComponents)(implicit inSys : ActorSystem, inMat : Materializer) extends AdminController(cc) {
+import scala.concurrent.ExecutionContext
+
+class AccountingController  @Inject()(cc : ControllerComponents, executionContext : ExecutionContext, wsClient : WSClient, site : Site)(implicit inSys : ActorSystem, inMat : Materializer) extends AdminController(cc, executionContext, wsClient, site) {
 
   def index = actionFrom {
     case request : Request[AnyContent] => {

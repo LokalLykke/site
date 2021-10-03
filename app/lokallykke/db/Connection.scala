@@ -41,7 +41,7 @@ object Connection {
     }
   }
 
-  class PostgresHandler extends Tables with ItemHandler with PageHandler with CustomerPageHandler {
+  class PostgresHandler extends Tables with ItemHandler with PageHandler with CustomerPageHandler with SessionHandler {
     import slick.jdbc.PostgresProfile.api._
     private implicit val dt = 30.seconds
 

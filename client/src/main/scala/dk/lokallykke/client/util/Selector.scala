@@ -46,7 +46,7 @@ object Selector {
       .setOptions(options.map(opt => js.Dynamic.literal(id = opt, name = opt)).toJsArray)
       .setItems(selected.toJsArray)
 
-    val ret = $(s"#$id").selectize(opts)
+    val ret = $(s"#$id").selectize(opts.asInstanceOf[IOptions[scala.scalajs.js.Any, scala.scalajs.js.Any]])
     ret
   }
 
@@ -59,7 +59,7 @@ object Selector {
       .setOptions(options.map(opt => js.Dynamic.literal(id = opt, name = opt)).toJsArray)
       .setItems(selected.toJsArray)
 
-    val ret = $(s"#$id").selectize(opts)
+    val ret = $(s"#$id").selectize(opts.asInstanceOf[IOptions[scala.scalajs.js.Any, scala.scalajs.js.Any]])
     ret
   }
 
@@ -72,7 +72,7 @@ object Selector {
       case Some(sels) => opts.setItems(sels.toArray.toJsArray)
       case _ => opts
     }
-    $(jqString).selectize(withSelected)
+    $(jqString).selectize(withSelected.asInstanceOf[IOptions[scala.scalajs.js.Any, scala.scalajs.js.Any]])
 
   }
 

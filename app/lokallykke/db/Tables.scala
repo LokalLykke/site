@@ -2,7 +2,7 @@ package lokallykke.db
 
 import lokallykke.model.items.{Item, ItemTag}
 import lokallykke.model.pages.{Image, Page, PageContent, PageContentItem, PageTag}
-import lokallykke.model.session.UserSession
+import lokallykke.model.session.{AuthenticationProcess, UserSession}
 import org.slf4j.LoggerFactory
 import slick.jdbc.JdbcProfile
 
@@ -149,23 +149,33 @@ trait Tables {
   object Session {
 
     val sessions = TableQuery[UserSessionTable]
+    val processes = TableQuery[AuthenticationProcessTable]
 
-    val schema = sessions.schema
+    val schema = sessions.schema ++ processes.schema
 
     class UserSessionTable(tag : Tag) extends Table[UserSession](tag, "USERSESSION"){
-      def sessionid = column[Long]("SESSIONID", O.PrimaryKey)
-      def email = column[Option[String]]("EMAIL")
-      def authenticated = column[Int]("AUTHENTICATED")
-      def state = column[Option[String]]("SIGNINSTATE")
-      def nonce = column[Option[String]]("SIGNINNONCE")
-      def expires = column[Option[Timestamp]]("EXPIRES")
+      def sessionid = column[Long]("SESSIONID", O.PrimaryKey, O.AutoInc)
+      def ip = column[String]("IPADDRESS")
+      def started = column[Timestamp]("STARTED")
 
-      def * = (sessionid, email, authenticated, state, nonce, expires) <> (UserSession.tupled, UserSession.unapply)
+      def * = (sessionid, ip, started) <> (UserSession.tupled, UserSession.unapply)
+    }
+
+    class AuthenticationProcessTable(tag : Tag) extends Table[AuthenticationProcess](tag, "AUTHPROCESS") {
+      def sessionId = column[Long]("SESSIONID")
+      def nonce = column[String]("SIGNINNONCE")
+      def state = column[String]("SIGNINSTATE")
+      def forwardUrl = column[String]("FORWARDURL", O.Length(2000))
+      def email = column[Option[String]]("EMAIL")
+      def validUntil = column[Option[Timestamp]]("VALIDUNTIL")
+      def * = (sessionId, nonce, state, forwardUrl, email, validUntil) <> (AuthenticationProcess.tupled, AuthenticationProcess.unapply)
+
+      def pk = primaryKey("PK_AUTHPROCESS", (sessionId, nonce))
+      def fkSessionId = foreignKey("FK_AUTHPROCESS_SESSID", sessionId, sessions)(_.sessionid, onDelete = ForeignKeyAction.Cascade)
 
     }
 
 
   }
-
 
 }

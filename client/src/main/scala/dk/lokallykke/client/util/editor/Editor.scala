@@ -35,7 +35,7 @@ object Editor {
       .setHolder(insertId)
       .setHideToolbar(false)
       .setTools(toolSettings)
-      .setData(outputDataMod.OutputData(blocks.map(_.toDataInput.asInstanceOf[outputDataMod.OutputBlockData[String,_]]).toJsArray))
+      .setData(outputDataMod.OutputData(blocks.map(_.toDataInput.asInstanceOf[outputDataMod.OutputBlockData[String,scala.scalajs.js.Any]]).toJsArray))
     val editor = new mod.default(config)
     editor
   }
@@ -53,7 +53,7 @@ object Editor {
   object ImageTool extends ToolConstructable
 
 
-  def toolSettings: StringDictionary[ToolSettings[_]]  = StringDictionary(
+  def toolSettings: StringDictionary[ToolSettings[scala.scalajs.js.Any]]  = StringDictionary(
     "list" -> toolSettingsMod.ToolSettings[Config](ListTool)
       .setInlineToolbar(false),
     "header" -> toolSettingsMod.ToolSettings[Config](HeaderTool)
@@ -71,10 +71,7 @@ object Editor {
       ).asInstanceOf[ToolConfig[Config]]
 
     )
-
-
-
-  )
+  ).asInstanceOf[StringDictionary[ToolSettings[scala.scalajs.js.Any]]]
 
   implicit class OutputDataParser(promise : Promise[outputDataMod.OutputData]) {
     private implicit val dt = 20.seconds

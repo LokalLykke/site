@@ -1,6 +1,6 @@
 import org.scalajs.linker.interface.{ModuleInitializer, ModuleSplitStyle, OutputPatterns}
 
-
+lazy val securityProject = RootProject(uri("file:///c:/git/lokallykke-security"))
 
 lazy val root = (project in file("."))
   .settings(commonSettings)
@@ -36,6 +36,8 @@ lazy val root = (project in file("."))
   )
   .enablePlugins(PlayScala, LauncherJarPlugin)
   .dependsOn(client)
+  .dependsOn(securityProject)
+  .aggregate(securityProject)
 
 
 val circeVersion = "0.13.0"

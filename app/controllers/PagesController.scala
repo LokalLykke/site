@@ -16,11 +16,13 @@ import org.apache.commons.io.FileUtils
 import play.api.libs.json.{JsObject, Json}
 import play.api.mvc._
 import play.api.libs.json._
+import play.api.libs.ws.WSClient
 
 import javax.inject.Inject
+import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
-class PagesController  @Inject()(cc : ControllerComponents, site : Site)(implicit inSys : ActorSystem, inMat : Materializer) extends AdminController(cc) {
+class PagesController  @Inject()(cc : ControllerComponents, executionContext : ExecutionContext, wsClient : WSClient, site : Site)(implicit inSys : ActorSystem, inMat : Materializer) extends AdminController(cc, executionContext, wsClient, site) {
 
   val handler = site.pageHandler
 

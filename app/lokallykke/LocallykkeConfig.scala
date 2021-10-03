@@ -4,9 +4,13 @@ import com.typesafe.config.ConfigFactory
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 
 object LocallykkeConfig {
-  lazy val config = ConfigFactory.load("application.conf") /*ConfigFactory.load("production.conf").withFallback(
+  lazy val config = ConfigFactory.load("production.conf").withFallback(
     ConfigFactory.load("application.conf")
-  )*/
+  )
+
+  lazy val secretKey = config.getString("play.http.secret.key")
+
+  lazy val adminUsers = config.getStringList("admin-users")
 
   object Db {
     private lazy val dbConfig = config.getConfig("db")
@@ -20,6 +24,12 @@ object LocallykkeConfig {
     lazy val instaConfig = config.getConfig("instagram")
     lazy val user = instaConfig.getString("user")
     lazy val password = instaConfig.getString("password")
+  }
+
+  object OpenID {
+    lazy val openIDConfg = config.getConfig("open-id")
+    lazy val clientId = openIDConfg.getString("client-id")
+    lazy val secret = openIDConfg.getString("client-secret")
   }
 
 

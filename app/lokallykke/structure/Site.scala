@@ -1,6 +1,6 @@
 package lokallykke.structure
 
-import lokallykke.db.{CustomerPageHandler, ItemHandler, PageHandler}
+import lokallykke.db.{CustomerPageHandler, ItemHandler, PageHandler, SessionHandler}
 import play.api.inject.{Module => GuiceModule}
 
 trait Site extends GuiceModule {
@@ -8,6 +8,7 @@ trait Site extends GuiceModule {
   def itemHandler : ItemHandler
   def pageHandler : PageHandler
   def customerPageHandler : CustomerPageHandler
+  def sessionHandler : SessionHandler
 
   def init() : Unit = {}
 

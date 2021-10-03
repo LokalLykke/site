@@ -15,12 +15,14 @@ import lokallykke.structure.Site
 import org.apache.commons.io.FileUtils
 import org.slf4j.LoggerFactory
 import play.api.libs.json.{Json, Reads, Writes}
+import play.api.libs.ws.WSClient
 import play.api.mvc._
 
 import javax.inject.Inject
+import scala.concurrent.ExecutionContext
 import scala.util.{Failure, Success, Try}
 
-class ItemsController  @Inject()(cc : ControllerComponents, site : Site)(implicit inSys : ActorSystem, inMat : Materializer) extends AdminController(cc) {
+class ItemsController  @Inject()(cc : ControllerComponents, executionContext : ExecutionContext, wsClient : WSClient, site : Site)(implicit inSys : ActorSystem, inMat : Materializer) extends AdminController(cc, executionContext, wsClient, site) {
   import ItemsController._
 
   val handler = site.itemHandler
