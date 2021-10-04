@@ -19,7 +19,7 @@ trait SessionHandler {
 
   val tables : Tables
 
-  protected val insertSession = tables.Session.sessions returning tables.Session.sessions.map(_.sessionid) into ((sess, id) => sess.copy(sessionId = id))
+  protected lazy val insertSession = tables.Session.sessions returning tables.Session.sessions.map(_.sessionid) into ((sess, id) => sess.copy(sessionId = id))
 
   def createSession(ip : String): Long = {
     val started = new Timestamp(System.currentTimeMillis)
