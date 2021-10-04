@@ -16,14 +16,14 @@ import scala.concurrent.ExecutionContext
 class AuthenticationCallbackController @Inject()(cc : ControllerComponents, executionContext : ExecutionContext, wsClient : WSClient, site : Site)(implicit inSys : ActorSystem, inMat : Materializer) extends AbstractController(cc){
   implicit val ec = executionContext
 
-  def callback(state : String, code : String) : Action[AnyContent] = {
-    case request : Request[AnyContent] => {
+  def callback(state : String, code : String) : Action[AnyContent] = Action {
+    implicit request : Request[AnyContent] => {
       val stateMap = Encryption.decryptAndDeserialize(state).toMap
       (stateMap.get(AdminController.StateFieldSessionIdName), stateMap.get(AdminController.StateFieldIpName), stateMap.get(AdminController.StateFieldNonceName)) match {
         case (Some(sessIdStr), Some(ip), Some(nonce)) if site.sessionHandler.validateNonceAndState(sessIdStr.toLong, nonce, state) => {
           val sessionId = sessIdStr.toLong
           val auther = new GoogleAuthenticator(wsClient)
-          auther.exchangeCode(code, LocallykkeConfig.OpenID.clientId, LocallykkeConfig.OpenID.secret, null)
+          auther.exchangeCode(code, LocallykkeConfig.OpenID.clientId, LocallykkeConfig.OpenID.secret, controllers.routes.AuthenticationCallbackController.exchangeCodeCallback.absoluteURL)
           Ok("Ok")
         }
         case _ => Results.ExpectationFailed
@@ -31,8 +31,8 @@ class AuthenticationCallbackController @Inject()(cc : ControllerComponents, exec
     }
   }
 
-  def exchangeCodeCallback() : Action[AnyContent] =  {
-    case request : Request[AnyContent] => {
+  def exchangeCodeCallback() : Action[AnyContent] =  Action {
+    request : Request[AnyContent] => {
       request.body.asJson match {
         case Some(js) => {
           val accessToken = (js \ "access_token").as[String]

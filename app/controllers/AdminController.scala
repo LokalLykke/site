@@ -5,6 +5,7 @@ import akka.stream.Materializer
 import lokallykke.LocallykkeConfig
 import lokallykke.security.{Encryption, GoogleAuthenticator, StateValueGenerator}
 import lokallykke.structure.Site
+import controllers.routes
 import org.slf4j.LoggerFactory
 import play.api.libs.json.JsObject
 import play.api.libs.streams.ActorFlow
@@ -19,21 +20,18 @@ abstract class AdminController @Inject()(cc : ControllerComponents, executionCon
   private val sessionHandler = site.sessionHandler
   private implicit val ec = executionContext
 
-  def actionFrom(act : (Request[AnyContent], AdminController.AdminControllerContext) => Result) : Action[AnyContent] = {
-    val handler : Action[AnyContent] = {
-      case request: Request[AnyContent] => authenticate(request) match {
-        case Left(fut) => Action.async {
-          fut
-        }
-        case Right(contx) => Action {
+  def actionFrom(act : (Request[AnyContent], AdminController.AdminControllerContext) => Result) : Action[AnyContent] = Action.async {
+    request: Request[AnyContent] =>
+      authenticate(request) match {
+        case Left(fut) => fut
+        case Right(contx) => Future {
           act(request, contx)
         }
       }
-    }
-    handler
   }
 
   def authenticate(request : Request[AnyContent]) : Either[Future[Result], AdminController.AdminControllerContext] = {
+    implicit val req = request
     val ip = request.connection.remoteAddress.getHostAddress
     val forwardUrl = request.uri
     request.cookies.get(AdminController.AdminSessionCookie) match {
@@ -46,14 +44,14 @@ abstract class AdminController @Inject()(cc : ControllerComponents, executionCon
     }
   }
 
-  def initiateAuthenticationFlow(sessionId : Option[Long], ip : String, forwardUrl : String) = {
+  def initiateAuthenticationFlow(sessionId : Option[Long], ip : String, forwardUrl : String)(implicit req : Request[AnyContent]) = {
     val sessId = sessionId.getOrElse(sessionHandler.createSession(ip))
     var nonce = StateValueGenerator.generateNonce
     while(sessionHandler.nonceExists(sessId, nonce))
       nonce = StateValueGenerator.generateNonce
     val authenticator = new GoogleAuthenticator(wsClient)
     val state = Encryption.serializeAndEncrypt(List(AdminController.StateFieldSessionIdName -> sessId.toString, AdminController.StateFieldIpName -> ip, AdminController.StateFieldNonceName -> nonce))
-    authenticator.initializeFlow(LocallykkeConfig.OpenID.clientId, "", nonce, state) match {
+    authenticator.initializeFlow(LocallykkeConfig.OpenID.clientId, routes.AuthenticationCallbackController.callback("","").absoluteURL, nonce, state) match {
       case Some(signinFut) => signinFut.map(signinRes => Ok(signinRes.body))
       case None => Future { Results.ExpectationFailed }
     }

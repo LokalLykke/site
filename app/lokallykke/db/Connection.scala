@@ -43,7 +43,7 @@ object Connection {
 
   class PostgresHandler extends Tables with ItemHandler with PageHandler with CustomerPageHandler with SessionHandler {
     import slick.jdbc.PostgresProfile.api._
-    private implicit val dt = 30.seconds
+    override implicit val dt = 30.seconds
 
     override val tables: Tables = this
     override val db = Database.forDataSource(ds, Some(5)).asInstanceOf[slick.jdbc.JdbcBackend.Database]
