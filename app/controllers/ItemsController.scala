@@ -28,7 +28,7 @@ class ItemsController  @Inject()(cc : ControllerComponents, executionContext : E
   val handler = site.itemHandler
 
   def index = actionFrom {
-    case request : Request[AnyContent] => {
+    case (request : Request[AnyContent], context) => {
       val items = ItemsController.loadItems(handler, false)
       val options = site.itemHandler.loadDistinctTags
 

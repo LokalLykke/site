@@ -27,7 +27,7 @@ class PagesController  @Inject()(cc : ControllerComponents, executionContext : E
   val handler = site.pageHandler
 
   def index = actionFrom {
-    case request : Request[AnyContent] => {
+    case (request : Request[AnyContent], context) => {
       import PagesController._
       val shells = Json.stringify(Json.toJson(handler.loadPageIdAndNames.map(p => PageShell(p._1, p._2)).sortBy(_.name)))
       val tags = handler.loadTags
@@ -37,7 +37,7 @@ class PagesController  @Inject()(cc : ControllerComponents, executionContext : E
   }
 
   def saveImage() = actionFrom {
-    case request : Request[AnyContent] => {
+    case (request : Request[AnyContent], context) => {
       val (bytes, typ) = (request.body.asMultipartFormData.head.file("image").map {
         case tempFile => {
           val rb = FileUtils.readFileToByteArray(tempFile.ref)

@@ -17,28 +17,32 @@ import scala.concurrent.{ExecutionContext, Future}
 abstract class AdminController @Inject()(cc : ControllerComponents, executionContext : ExecutionContext, wsClient : WSClient, site : Site)(implicit inSys : ActorSystem, inMat : Materializer) extends AbstractController(cc) {
   protected lazy val logger = LoggerFactory.getLogger(this.getClass)
   private val sessionHandler = site.sessionHandler
+  private implicit val ec = executionContext
 
-  def actionFrom(act : Request[AnyContent] => Result) : Action[AnyContent] = {
-    val handler = {
-      case request : Request[AnyContent] => {
-
-      }
-    }
-    Action {
-
-      act
-    }
-  }
-
-  def authenticate : Request[AnyContent] => Option[Result] = {
-    case request: Request[AnyContent] => request.cookies.get(AdminController.AdminSessionCookie) match {
-      case Some(cook) if cook.value.matches("^[0-9]+$") => {
-        val sessionId = cook.value.toLong
-        val ip = request.connection.remoteAddress.getHostAddress
-        if(sessionHandler.isAuthorized(sessionId, ip)) None
-        else {
+  def actionFrom(act : (Request[AnyContent], AdminController.AdminControllerContext) => Result) : Action[AnyContent] = {
+    val handler : Action[AnyContent] = {
+      case request: Request[AnyContent] => authenticate(request) match {
+        case Left(fut) => Action.async {
+          fut
+        }
+        case Right(contx) => Action {
+          act(request, contx)
         }
       }
+    }
+    handler
+  }
+
+  def authenticate(request : Request[AnyContent]) : Either[Future[Result], AdminController.AdminControllerContext] = {
+    val ip = request.connection.remoteAddress.getHostAddress
+    val forwardUrl = request.uri
+    request.cookies.get(AdminController.AdminSessionCookie) match {
+      case Some(cook) if cook.value.matches("^[0-9]+$") => {
+        val sessionId = cook.value.toLong
+        if(sessionHandler.isAuthorized(sessionId, ip)) Right(AdminController.AdminControllerContext(sessionId))
+        else Left(initiateAuthenticationFlow(Some(sessionId),ip,forwardUrl))
+      }
+      case _ => Left(initiateAuthenticationFlow(None, ip, forwardUrl))
     }
   }
 
@@ -49,8 +53,10 @@ abstract class AdminController @Inject()(cc : ControllerComponents, executionCon
       nonce = StateValueGenerator.generateNonce
     val authenticator = new GoogleAuthenticator(wsClient)
     val state = Encryption.serializeAndEncrypt(List(AdminController.StateFieldSessionIdName -> sessId.toString, AdminController.StateFieldIpName -> ip, AdminController.StateFieldNonceName -> nonce))
-
-    authenticator.initializeFlow(LocallykkeConfig.OpenID.clientId, "")
+    authenticator.initializeFlow(LocallykkeConfig.OpenID.clientId, "", nonce, state) match {
+      case Some(signinFut) => signinFut.map(signinRes => Ok(signinRes.body))
+      case None => Future { Results.ExpectationFailed }
+    }
 
   }
 
@@ -66,6 +72,7 @@ abstract class AdminController @Inject()(cc : ControllerComponents, executionCon
 }
 
 object AdminController {
+  case class AdminControllerContext(sessionId : Long)
 
   val AdminSessionCookie = "SESSIONID"
   val StateFieldSessionIdName = "SessionId"

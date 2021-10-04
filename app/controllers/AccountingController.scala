@@ -16,7 +16,7 @@ import scala.concurrent.ExecutionContext
 class AccountingController  @Inject()(cc : ControllerComponents, executionContext : ExecutionContext, wsClient : WSClient, site : Site)(implicit inSys : ActorSystem, inMat : Materializer) extends AdminController(cc, executionContext, wsClient, site) {
 
   def index = actionFrom {
-    case request : Request[AnyContent] => {
+    case (request : Request[AnyContent], context) => {
       Ok(views.html.accounting())
     }
 

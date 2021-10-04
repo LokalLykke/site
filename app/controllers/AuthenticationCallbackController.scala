@@ -9,6 +9,7 @@ import play.api.libs.json.Json
 import play.api.libs.ws.WSClient
 import play.api.mvc.{AbstractController, Action, AnyContent, ControllerComponents, Request, Result, Results}
 
+
 import javax.inject.Inject
 import scala.concurrent.ExecutionContext
 
@@ -30,17 +31,17 @@ class AuthenticationCallbackController @Inject()(cc : ControllerComponents, exec
     }
   }
 
-  def exchangeCodeCallback() : Action[AnyContent] = {
+  def exchangeCodeCallback() : Action[AnyContent] =  {
     case request : Request[AnyContent] => {
-      request.body.asJson.foreach {
-        case js => {
+      request.body.asJson match {
+        case Some(js) => {
           val accessToken = (js \ "access_token").as[String]
           val expiresIn = (js \ "expires_in").as[String]
           val idToken = (js\"id_token").as[String]
           val scope = (js \ "scope").as[String]
           Ok("Ok")
-
         }
+        case _ => Results.ExpectationFailed
       }
     }
   }
