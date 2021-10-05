@@ -1,12 +1,14 @@
 package controllers
 
 import akka.actor.{Actor, ActorRef, ActorSystem, Props}
+import akka.http.javadsl.model.ContentType
 import akka.stream.Materializer
 import lokallykke.LocallykkeConfig
 import lokallykke.security.{Encryption, GoogleAuthenticator, StateValueGenerator}
 import lokallykke.structure.Site
 import controllers.routes
 import org.slf4j.LoggerFactory
+import play.api.http.ContentTypes
 import play.api.libs.json.JsObject
 import play.api.libs.streams.ActorFlow
 import play.api.libs.ws.WSClient
@@ -51,8 +53,11 @@ abstract class AdminController @Inject()(cc : ControllerComponents, executionCon
       nonce = StateValueGenerator.generateNonce
     val authenticator = new GoogleAuthenticator(wsClient)
     val state = Encryption.serializeAndEncrypt(List(AdminController.StateFieldSessionIdName -> sessId.toString, AdminController.StateFieldIpName -> ip, AdminController.StateFieldNonceName -> nonce))
-    authenticator.initializeFlow(LocallykkeConfig.OpenID.clientId, routes.AuthenticationCallbackController.callback("","").absoluteURL, nonce, state) match {
-      case Some(signinFut) => signinFut.map(signinRes => Ok(signinRes.body))
+    val callbackUrl = routes.AuthenticationCallbackController.callback("","").absoluteURL.replaceAll("""\?.*""","")
+    logger.info(s"Directing to forward URL: $callbackUrl")
+
+    authenticator.initializeFlow(LocallykkeConfig.OpenID.clientId, callbackUrl, nonce, state) match {
+      case Some(signinFut) => signinFut.map(signinRes => Ok(signinRes.body).as(ContentTypes.HTML))
       case None => Future { Results.ExpectationFailed }
     }
 

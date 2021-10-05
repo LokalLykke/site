@@ -58,6 +58,8 @@ lazy val client = (project in file("client"))
     npmDependencies in Compile ++= Seq(
       "webpack-merge" -> "5.7.3",
       "style-loader" -> "2.0.0",
+      //"@popperjs/core"-> "2.0.0",
+      "popper.js" -> "1.16.1",
       "jquery" -> "3.6.0",
       "bootstrap" -> "4.6.0",
       "@types/selectize" -> "0.12.34",
@@ -68,7 +70,7 @@ lazy val client = (project in file("client"))
       "@editorjs/list" -> "1.6.2",
       "@editorjs/embed" -> "2.4.0"
     ),
-    stIgnore := List("jquery", "bootstrap","webpack-merge","style-loader","@editorjs/header","@editorjs/image","@editorjs/list","@editorjs/embed"),
+    stIgnore := List("sass-loader", "jquery", "bootstrap","webpack-merge","style-loader","@editorjs/header","@editorjs/image","@editorjs/list","@editorjs/embed"),
     sourceGenerators in Compile += Def.task {
       val _ = (npmInstallDependencies in Compile).value
       Seq.empty[File]

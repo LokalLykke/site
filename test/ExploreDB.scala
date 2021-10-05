@@ -7,8 +7,9 @@ object ExploreDB {
 
   def main(args: Array[String]): Unit = {
     implicit val handler = Connection.postgresHandler
-    handler.createItemTables(handler.db)
-    handler.createPageTables(handler.db)
+    //handler.createItemTables(handler.db)
+    //handler.createPageTables(handler.db)
+    handler.createUserSessionTables(handler.db)
   }
 
 }
