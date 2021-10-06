@@ -1,7 +1,7 @@
 package lokallykke
 
 import com.typesafe.config.ConfigFactory
-import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
+import scala.jdk.CollectionConverters._
 
 object LocallykkeConfig {
   lazy val config = ConfigFactory.load("production.conf").withFallback(
@@ -10,7 +10,7 @@ object LocallykkeConfig {
 
   lazy val secretKey = config.getString("play.http.secret.key")
 
-  lazy val adminUsers = config.getStringList("admin-users")
+  lazy val adminUsers = config.getStringList("admin-users").asScala.toList
 
   object Db {
     private lazy val dbConfig = config.getConfig("db")

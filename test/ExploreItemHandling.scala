@@ -11,9 +11,10 @@ object ExploreItemHandling {
   private implicit val dt = 30.seconds
 
   def main(args: Array[String]): Unit = {
-    val resp = InstagramLoader.parseResponse
+    InstagramLoader.downloadItems()
+    /*val resp = InstagramLoader.parseResponse
     println(s"Parsed: ${resp.size} posts")
-    resp.foreach(it => println(it))
+    resp.foreach(it => println(it))*/
 
   }
 

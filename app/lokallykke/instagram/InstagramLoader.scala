@@ -21,7 +21,9 @@ object InstagramLoader {
 
 
   def downloadItems(implicit loaderObserver : LoaderObserver = LoaderObserver.Sink) = {
-    /*if(ResultDir.exists())
+    if(!OutputDir.exists())
+      OutputDir.mkdirs()
+    if(ResultDir.exists())
       ResultDir.delete()
     val cmd = Process(Seq(
     """c:\tools\instaloader\instaloader.exe""",
@@ -35,7 +37,7 @@ object InstagramLoader {
     val res = cmd.!!
     loaderObserver.onCommandLineUpdate(res)
     logger.info(s"Result from InstagramLoader:")
-    logger.info(res)*/
+    logger.info(res)
     val parsed = parseResponse
     loaderObserver.onProgressChange(LoaderObserver.ParsingState.Done)
     logger.info(s"Downloaded and parsed ${parsed.size} items from Instagram")

@@ -27,12 +27,6 @@ object ExploreAuthentication {
         val auther = new GoogleAuthenticator(client)
         val nonce = StateValueGenerator.generateNonce
         val state = StateValueGenerator.stateFrom(Some(System.currentTimeMillis()))
-        auther.initializeFlow(ClientId, redirectUrl, nonce, state).foreach {
-          case fut => {
-            val res = Await.result(fut, 1.minute)
-            println(res)
-          }
-        }
       }
     }
 

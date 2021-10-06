@@ -1,11 +1,15 @@
 package lokallykke.security
 
+import com.auth0.jwt.JWT
+import com.auth0.jwt.interfaces.Claim
 import lokallykke.LocallykkeConfig
 
 import java.security.MessageDigest
-import java.util.Base64
+import java.time.{Instant, LocalDateTime}
+import java.util.{Base64, TimeZone}
 import javax.crypto.Cipher
 import javax.crypto.spec.SecretKeySpec
+import scala.jdk.CollectionConverters._
 
 object Encryption {
 
@@ -39,6 +43,27 @@ object Encryption {
     val decrypted = decrypt(str)
     decrypted.split(EntrySplitString).toList.map(_.split(PairSplitString)).filter(_.size == 2).map(en => en(0) -> en(1))
   }
+
+  def decryptJWTToken(token : String) = {
+    val dec = JWT.decode(token)
+    JWTToken(
+      dec.getIssuer,
+      dec.getAudience.asScala.toList,
+      dec.getSubject,
+      optClaim(dec.getClaim("email")).map(_.asString),
+      optClaim(dec.getClaim("email_verified")).map(_.asBoolean),
+      asLocalDateTime(dec.getClaim("iat").asLong),
+      asLocalDateTime(dec.getClaim("exp").asLong),
+      optClaim(dec.getClaim("nonce")).map(_.asString)
+    )
+  }
+
+  def optClaim(cl : Claim) : Option[Claim] = if(cl.isNull) None else Some(cl)
+  def asLocalDateTime(longVal : Long) = LocalDateTime.ofInstant(Instant.ofEpochMilli(longVal * 1000L), TimeZone.getDefault.toZoneId)
+
+
+
+  case class JWTToken(issuer : String, audience : Seq[String], subject : String, email : Option[String], emailVerified : Option[Boolean], issuedAt : LocalDateTime, expires : LocalDateTime, nonce : Option[String])
 
 
 }

@@ -64,6 +64,10 @@ trait SessionHandler {
     Await.result(db.run(updateStat), 10.seconds)
   }
 
+  def retrieveForwardURL(sessionId : Long, nonce : String) : Option[String] = {
+    Await.result(db.run(tables.Session.processes.filter(p => p.sessionId === sessionId && p.nonce === nonce).map(_.forwardUrl).result),5.seconds).headOption
+  }
+
 
 
 }

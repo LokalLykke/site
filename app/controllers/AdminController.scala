@@ -55,8 +55,9 @@ abstract class AdminController @Inject()(cc : ControllerComponents, executionCon
     val authenticator = new GoogleAuthenticator(wsClient)
     val state = Encryption.serializeAndEncrypt(List(AdminController.StateFieldSessionIdName -> sessId.toString, AdminController.StateFieldIpName -> ip, AdminController.StateFieldNonceName -> nonce))
     logger.info(s"Sending state: $state")
-    val callbackUrl = routes.AuthenticationCallbackController.callback("","").absoluteURL(true).replaceAll("""\?.*""","")
+    val callbackUrl = AdminController.urlToCallback
     logger.info(s"Directing to forward URL: $callbackUrl")
+    site.sessionHandler.initiateAuthenticationProcess(sessId, nonce, state, forwardUrl)
 
     authenticator.initializationURL(LocallykkeConfig.OpenID.clientId, callbackUrl, nonce, state) match {
       case Some(rediectURL) => Future { Redirect(rediectURL) }
@@ -79,6 +80,7 @@ abstract class AdminController @Inject()(cc : ControllerComponents, executionCon
 
 object AdminController {
   case class AdminControllerContext(sessionId : Long)
+  def urlToCallback(implicit request : Request[_]) = routes.AuthenticationCallbackController.callback("","").absoluteURL(true).replaceAll("""\?.*""","")
 
   val AdminSessionCookie = "SESSIONID"
   val StateFieldSessionIdName = "SessionId"
