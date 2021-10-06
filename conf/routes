@@ -1,7 +1,7 @@
 GET     /shop                                   controllers.ShopController.index()
 GET     /page/:pageId                           controllers.CustomerPageController.page(pageId : Long)
 
-POST    /auth/callback                          controllers.AuthenticationCallbackController.callback(state : String, code : String)
+GET    /auth/callback                          controllers.AuthenticationCallbackController.callback(state : String, code : String)
 POST    /auth/exchange                          controllers.AuthenticationCallbackController.exchangeCodeCallback()
 
 GET     /items/itemimage                        controllers.LokalLykkeAssets.itemImage(itemId : Long)

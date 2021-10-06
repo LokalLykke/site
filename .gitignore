@@ -29,3 +29,5 @@ info.txt
 /test/ExploreByensBazarLogon.scala
 /test/ExploreKirppuLogon.scala
 /.bsp/
+/conf/lokallykke.jks
+/conf/devrunsettings.conf

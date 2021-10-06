@@ -14,6 +14,7 @@ import play.api.libs.streams.ActorFlow
 import play.api.libs.ws.WSClient
 import play.api.mvc._
 
+import java.net.URLEncoder
 import javax.inject.Inject
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -53,13 +54,15 @@ abstract class AdminController @Inject()(cc : ControllerComponents, executionCon
       nonce = StateValueGenerator.generateNonce
     val authenticator = new GoogleAuthenticator(wsClient)
     val state = Encryption.serializeAndEncrypt(List(AdminController.StateFieldSessionIdName -> sessId.toString, AdminController.StateFieldIpName -> ip, AdminController.StateFieldNonceName -> nonce))
-    val callbackUrl = routes.AuthenticationCallbackController.callback("","").absoluteURL.replaceAll("""\?.*""","")
+    logger.info(s"Sending state: $state")
+    val callbackUrl = routes.AuthenticationCallbackController.callback("","").absoluteURL(true).replaceAll("""\?.*""","")
     logger.info(s"Directing to forward URL: $callbackUrl")
 
-    authenticator.initializeFlow(LocallykkeConfig.OpenID.clientId, callbackUrl, nonce, state) match {
-      case Some(signinFut) => signinFut.map(signinRes => Ok(signinRes.body).as(ContentTypes.HTML))
+    authenticator.initializationURL(LocallykkeConfig.OpenID.clientId, callbackUrl, nonce, state) match {
+      case Some(rediectURL) => Future { Redirect(rediectURL) }
       case None => Future { Results.ExpectationFailed }
     }
+
 
   }
 

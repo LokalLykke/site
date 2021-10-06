@@ -29,10 +29,8 @@ lazy val root = (project in file("."))
       val bundles = (webpack in fastOptJS in Compile in client).value.map(_.data)
       bundles.foreach(bund => println(s"Generated bundle: ${bund.getAbsolutePath} during webpack"))
       bundles
-      //println(s"JS target file: ${clientTarget.getAbsolutePath}")
-      //Seq()
-    }.taskValue/*,
-    unmanagedSources += client.*/
+    }.taskValue,
+    PlayKeys.devSettings ++= IO.readLines(new File("./conf/devrunsettings.conf")).map(_.split("=")).map(p => p(0) -> p(1))
   )
   .enablePlugins(PlayScala, LauncherJarPlugin)
   .dependsOn(client)
@@ -90,3 +88,5 @@ lazy val commonSettings = Seq(
     "commons-io" % "commons-io" % "2.8.0"
   )
 )
+
+
