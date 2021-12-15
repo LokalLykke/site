@@ -78,7 +78,8 @@ object Messages {
 
     object ToClient {
       case class ToClientMessage(tags : Option[Seq[String]] = None, pageShells : Option[Seq[PageShell]] = None,
-                                 page : Option[ViewPage] = None, errorMessage : Option[String] = None, items : Option[Seq[ViewItem]] = None)
+                                 page : Option[ViewPage] = None, errorMessage : Option[String] = None, items : Option[Seq[ViewItem]] = None,
+                                 generatedPageId : Option[Long] = None)
     }
 
 

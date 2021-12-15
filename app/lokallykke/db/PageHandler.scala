@@ -58,7 +58,7 @@ trait PageHandler {
     }
   }
 
-  def savePage(page : Page, tags : Seq[PageTag], content : Seq[(PageContent, Seq[String])]) : Unit = {
+  def savePage(page : Page, tags : Seq[PageTag], content : Seq[(PageContent, Seq[String])]) : Option[Long] = {
     val refPageId = if(page.id < 0) {
       val retPage = Await.result(db.run(insertPage += page), dt)
       retPage.id
@@ -76,6 +76,8 @@ trait PageHandler {
     }
     Await.result(db.run(contentItems ++= contentItemsToInsert), dt)
     logger.info(s"Inserted page: ${page.name} with ID: ${page.id}, ${tags.size} and ${content.size} content")
+    if(page.id < 0) Some(refPageId)
+    else None
   }
 
   def deletePage(pageId : Long) : Unit = {

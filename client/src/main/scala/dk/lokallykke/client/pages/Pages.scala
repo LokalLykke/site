@@ -167,7 +167,7 @@ object Pages {
         $(s"<div id='pages-blocks-editor'>")
       )
     )
-    tagSelector = Some(Selector(FormTagsId, appendTo = $(s"#$FormTagsHolderId"), allTags, page.tags))
+    tagSelector = Some(Selector(FormTagsId, appendTo = $(s"#$FormTagsHolderId"), allTags.sorted, page.tags))
     bindEventHandlers()
     bindFormButtons()
     val blocks = page.blocks.map {
@@ -196,7 +196,8 @@ object Pages {
 
     $i(FormDeleteButtonId).click((obj : JQueryEventObject) => {
       Modal.Accept("Er du sikker?", "Er du sikker på at du vil slette siden?", () => {
-
+        currentViewPage.foreach(page => PageConnector.deletePage(page.pageId))
+        clearSelection()
       }, "Ja", "Nej. Ikke alligevel")
     })
 
@@ -254,8 +255,8 @@ object Pages {
           mess.tags.foreach(tags => setTags(tags))
           mess.page.foreach(p => makeViewPageSelection(p))
           mess.errorMessage.foreach(err => showError(err))
-          println(s"Here I am with ze message")
           mess.items.foreach(items => displayItems(items))
+          mess.generatedPageId.foreach(genId => currentViewPage.foreach(pag => currentViewPage = Some(pag.copy(pageId = genId))))
         }
       }
     })
@@ -273,10 +274,12 @@ object Pages {
     def savePage(page : ViewPage) : Unit = {
       val mess = ToServer.ToServerMessage(ToServer.SavePage, Some(page))
       send(mess)
+      println(s"Requested save of page with name: ${page.name} and current ID: ${page.pageId}")
     }
 
     def deletePage(pageId : Long) : Unit = {
       val mess = ToServer.ToServerMessage(ToServer.DeletePage, pageId = Some(pageId))
+      println(s"Requested deletion of page with ID: ${pageId}")
       send(mess)
     }
 

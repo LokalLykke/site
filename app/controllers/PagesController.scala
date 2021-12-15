@@ -100,13 +100,20 @@ class PagesController  @Inject()(cc : ControllerComponents, executionContext : E
             }
           }
           case ToServer.DeletePage => {
+            logger.info(s"Received order to delete page, from message: ${message}")
             message.pageId.foreach(p => handler.deletePage(p))
             sendShells
           }
           case ToServer.SavePage => {
             message.viewPage.foreach {
               case pag => {
-                PagesController.saveViewPage(pag, handler)
+                val generatedPageIdForUpdate = PagesController.saveViewPage(pag, handler)
+                generatedPageIdForUpdate.foreach {
+                  case genPagId => {
+                    val genPagIdMess = ToClient.ToClientMessage(generatedPageId = generatedPageIdForUpdate)
+                    send(genPagIdMess)
+                  }
+                }
                 sendShells
               }
             }
@@ -168,7 +175,7 @@ object PagesController {
     imageIdRegex.findFirstIn(imageUrl.reverse).map(_.reverse.toLong)
   }
 
-  def saveViewPage(viewPage : ViewPage, handler : PageHandler) : Unit = {
+  def saveViewPage(viewPage : ViewPage, handler : PageHandler) : Option[Long] = {
     val page = Page(viewPage.pageId, viewPage.name, viewPage.description, 0)
     val tags = viewPage.tags.map(t => PageTag(0L, t))
     val content = viewPage.blocks.zipWithIndex.map {
@@ -177,7 +184,6 @@ object PagesController {
         , bl.items.toList.flatten)
     }
     handler.savePage(page, tags, content)
-
   }
 
 
