@@ -55,12 +55,15 @@
         <div class="col align-self-center">
           <div class="card-deck">
             @for(pag <- pages){
-            <div class='card' style="width: 18rem;">
-              <img src='@pag.imageUrl' class='card-image-top fixed-card-image'>
-              <div class='card-body'>
-                <p class="card-text">@pag.name</p>
+
+              <div class='card' style="width: 18rem;">
+                <img src='@pag.imageUrl' class='card-image-top fixed-card-image'>
+                <div class='card-body'>
+                  <a href="@{pag.pageUrl}" class="stretched-link">
+                    <p class="card-text">@pag.name</p>
+                  </a>
+                </div>
               </div>
-            </div>
             }
           </div>
         </div>
