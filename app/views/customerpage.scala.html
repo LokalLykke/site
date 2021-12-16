@@ -4,6 +4,18 @@
   items : Seq[_root_.dk.lokallykke.client.viewmodel.customer.CustomerItem]
 )
 
+@import _root_.dk.lokallykke.client.customerpages.Elements
+@import _root_.play.api.libs.json.Json
+@import _root_.dk.lokallykke.client.viewmodel.customer.CustomerItem
+
+<script type="module">
+    let items = @{
+      implicit val writes = Json.writes[CustomerItem]
+      Html(Json.stringify(Json.toJson(items)))
+    }
+    CustomerPages.setItems(JSON.stringify(items))
+  </script>
+
 @headerAddOn = {
   <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Tangerine">
   <link rel="stylesheet" media="screen" href="@controllers.routes.LokalLykkeAssets.at("css/customerpage.css")">
@@ -53,34 +65,11 @@
             }
              </div>
            </div>
-
           }
-      <!--div-- class="row row-cols-5 mt-5">
-          @for(pag <- pages){
-        <div class="col">
-            <div class='card'>
-              <img src='@pag.imageUrl' class='card-image-top'>
-              <div class='card-body'>
-                <p class="card-text">@pag.name</p>
-              </div>
-            </div>
+
+        <div id="@{Elements.ImageGridHolderId}">
         </div>
-       }
-      </div-->
-      <div class="row mt-5">
-        <div class="col align-self-center">
-          <div class="container d-flex">
-            @for(it <- items){
-            <div class='card' style="width: 18rem; height: 36rem">
-              <img src='@it.imageUrl' class='card-image-top fixed-card-image'>
-              <div class='card-body'>
-                <p class="card-text">@it.name</p>
-              </div>
-            </div>
-            }
-          </div>
-        </div>
-      </div>
+
 
 
     </div>

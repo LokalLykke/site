@@ -18,7 +18,15 @@ object Modal {
   type ValueResolver =  () => Option[Any]
 
 
-  def apply(id : String, title : String, fields : Seq[ModalField], onSave : Option[(Map[String, ValueResolver]) => Unit] = None, saveText : String = "Gem", cancelText : String = "Annuller") : Unit = {
+  def apply(
+             id : String,
+             title : String,
+             fields : Seq[ModalField],
+             onSave : Option[(Map[String, ValueResolver]) => Unit] = None,
+             saveText : String = "Gem",
+             cancelText : String = "Annuller",
+             showFooter : Boolean = true,
+             modalClass : String = "modal-dialog modal-dialog-centered") : Unit = {
     val body = $("<div class='modal-body'>")
     val resolvers = scala.collection.mutable.ArrayBuffer.empty[(String, () => Option[Any])]
     val contents = fields.filter(en => if(en.isInstanceOf[SelectableOptions]) false else true).map(bodyContentFromField)
@@ -41,21 +49,25 @@ object Modal {
       saveButton
       )
 
+    var modalContent = $(s"<div id='$id-modal-content' class='modal-content'>").append(
+      $("<div class='modal-header'>").append(
+        $(s"<h5 class='modal-title' id='$id-center-title'>").text(title),
+        $("<button type='button' class='close' data-dismiss='modal' aria-label='Close'>").append(
+          $("<span aria-hidden='true'>").html("&times;")
+        )
+      ),
+      body
+    )
+    if(showFooter)
+      modalContent = $(modalContent).append(footer)
+
 
     val modal = $(s"<div class='modal fade' id='$id' role='dialog' aria-labelledby='$id-center-title' aria-hidden='true'>").append(
-      $("<div class='modal-dialog modal-dialog-centered' role='document'>").append(
-        $("<div class='modal-content'>").append(
-          $("<div class='modal-header'>").append(
-            $(s"<h5 class='modal-title' id='$id-center-title'>").text(title),
-            $("<button type='button' class='close' data-dismiss='modal' aria-label='Close'>").append(
-              $("<span aria-hidden='true'>").html("&times;")
-            )
-          ),
-          body,
-          footer
-        )
+      $(s"<div class='${modalClass}' role='document'>").append(
+        modalContent
       )
     )
+
     displayModal(modal)
     fields.collect {
       case selOpt : SelectableOptions => {
