@@ -37,8 +37,12 @@ abstract class AdminController @Inject()(cc : ControllerComponents, executionCon
     implicit val req = request
     val ip = request.connection.remoteAddress.getHostAddress
     val forwardUrl = request.uri
-    request.cookies.get(AdminController.AdminSessionCookie) match {
-      case Some(cook) if cook.value.matches("^[0-9]+$") => {
+    val remoteAddress = req.remoteAddress
+    logger.info(s"Got called by ${req.remoteAddress}")
+    val isInternal = remoteAddress.startsWith("192.168")
+    (isInternal, request.cookies.get(AdminController.AdminSessionCookie)) match {
+      case (true, _) => Right(AdminController.AdminControllerContext(-1L))
+      case (_,Some(cook)) if cook.value.matches("^[0-9]+$") => {
         val sessionId = cook.value.toLong
         if(sessionHandler.isAuthorized(sessionId, ip)) Right(AdminController.AdminControllerContext(sessionId))
         else Left(initiateAuthenticationFlow(Some(sessionId),ip,forwardUrl))

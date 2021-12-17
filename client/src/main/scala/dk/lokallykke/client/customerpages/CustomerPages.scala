@@ -49,8 +49,8 @@ object CustomerPages {
     val cards : Seq[jquery.ElementDesc] = items.map {
       case itm => {
         val element = $("<div class='col'>").append(
-          $("<div class='card'>").append(
-            $(s"<img src='${itm.imageUrl}' class='card-img-top'>").append(
+          $("<div class='card mb-3'>").append(
+            $(s"<img src='${itm.imageUrl}' class='card-img-top rounded'>").append(
               $("<div class='card-body'>").append(
                 $("<h5 class='card-title'>").text(itm.name),
                 $("<p class='card-text'>").text(itm.caption.getOrElse(""))
