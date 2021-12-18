@@ -29,7 +29,7 @@ class ItemsController  @Inject()(cc : ControllerComponents, executionContext : E
 
   def index = actionFrom {
     case (request : Request[AnyContent], context) => {
-      val items = ItemsController.loadItems(handler, false)
+      val items = ItemsController.loadItems(handler, false, Set.empty[String], None)
       val options = site.itemHandler.loadDistinctTags
 
       Ok(views.html.items(items, options.mkString(";")))
@@ -59,8 +59,9 @@ class ItemsController  @Inject()(cc : ControllerComponents, executionContext : E
   class ItemsWSActor(out : ActorRef, site : Site) extends Actor with Pingable {
     import ItemsController._
 
-    def sendItems = {
-      val items = ItemsController.loadItems(site.itemHandler, false)
+    def sendItems(labelFilter : Set[String], nameFilter : Option[String]) = {
+      val items = ItemsController.loadItems(site.itemHandler, false, labelFilter, nameFilter)
+      logger.info(s"Based on labelFilter: ${labelFilter.mkString(", ")} and nameFilter: ${nameFilter}, loaded: ${items.map(_.itemId).mkString(", ")}")
       val options = site.itemHandler.loadDistinctTags
       out ! Json.toJson(ToClient.ToClientMessage(Some(items), tagOptions = Some(options)))
     }
@@ -72,20 +73,20 @@ class ItemsController  @Inject()(cc : ControllerComponents, executionContext : E
         message.messageType match {
           case ToServer.DeleteItemAndLoad => {
             message.itemId.foreach(id => site.itemHandler.deleteItem(id))
-            sendItems
+            sendItems(message.labelFilter, message.nameFilter)
           }
           case ToServer.DeleteItem => {
             message.itemId.foreach(id => site.itemHandler.deleteItem(id))
           }
           case ToServer.RequestItems => {
-            sendItems
+            sendItems(message.labelFilter, message.nameFilter)
           }
           case ToServer.UpdateItemAndLoad => {
             message.viewItem.foreach {
               case it => {
                 site.itemHandler.updateItem(it.itemId, it.name, it.caption, it.costValue, it.askPrice)
                 site.itemHandler.updateTagsFor(it.itemId, it.tags)
-                sendItems
+                sendItems(message.labelFilter, message.nameFilter)
               }
             }
           }
@@ -159,8 +160,8 @@ object ItemsController {
   implicit val instagramResultWrites : Writes[ToClient.InstagramResult] = Json.writes[ToClient.InstagramResult]
   implicit val messWrites : Writes[ToClient.ToClientMessage] = Json.writes[ToClient.ToClientMessage]
 
-  def loadItems(handler : ItemHandler, includeSold : Boolean) =  {
-    val items = handler.loadItems(includeSold)
+  def loadItems(handler : ItemHandler, includeSold : Boolean, tagFilter : Set[String], nameFilter : Option[String]) =  {
+    val items = handler.loadItems(includeSold, tagFilter, nameFilter)
     val tags = handler.loadTagsFor(items.map(_.id)).groupBy(_.itemid).map(p => p._1 -> p._2.sortBy(_.tag).map(_.tag))
     items.map {
       case it => ViewItem(it.id, it.instagramId, it.name, it.caption, it.registered.getTime, it.costvalue, it.askprice, tags.getOrElse(it.id, Nil))

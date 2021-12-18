@@ -62,8 +62,22 @@ trait ItemHandler {
     logger.info(s"Updated item with ID: ${itemId} name: ${name.getOrElse("")}  caption: ${caption.getOrElse("")} costvalue : ${costValue.map(_.toPrettyString).getOrElse("")}")
   }
 
-  def loadItems(includeSold : Boolean = false) : Seq[Item] = {
-    Await.result(db.run(liveItems.filter(en => en.soldat.isEmpty || includeSold).result), dt)
+  def loadItems(includeSold : Boolean = false, tagFilter : Set[String], nameFilter : Option[String]) : Seq[Item] = {
+    val baseQuery = liveItems.filter(en => en.soldat.isEmpty || includeSold)
+    val filteredByName = nameFilter match {
+      case None => baseQuery
+      case Some(namFiltr) => baseQuery.filter(en => en.name.like(namFiltr))
+    }
+    val filteredByTags = if(tagFilter.isEmpty) filteredByName
+    else {
+      val withAllTags = tagFilter
+        .map(filt => tags.filter(tag => tag.tagname === filt).map(en => en.itemid))
+        .reduce((res1, res2) => res1.filter(r1 => res2.filter(r2 => r2 === r1).exists))
+      filteredByName.filter(res => withAllTags.filter(wt => wt === res.id).exists)
+    }
+    val returnee = Await.result(db.run(filteredByTags.result), dt)
+    logger.info(s"Returned following IDs: ${returnee.map(_.id).mkString(", ")}")
+    returnee
   }
 
   def loadItems(itemIds : Seq[Long]) : Seq[Item] = {

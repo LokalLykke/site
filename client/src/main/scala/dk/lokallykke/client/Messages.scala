@@ -29,7 +29,13 @@ object Messages {
     import dk.lokallykke.client.viewmodel.items._
 
     object ToServer {
-      case class ToServerMessage(messageType : String, viewItem : Option[ViewItem] = None, itemId : Option[Long] = None, instagramItem: Option[InstagramItem] = None, allInstagramItems : Option[Seq[InstagramItem]] = None)
+      case class ToServerMessage(messageType : String,
+                                 viewItem : Option[ViewItem] = None,
+                                 itemId : Option[Long] = None,
+                                 instagramItem: Option[InstagramItem] = None,
+                                 allInstagramItems : Option[Seq[InstagramItem]] = None,
+                                 labelFilter : Set[String] = Set.empty[String],
+                                 nameFilter : Option[String] = None)
 
       val UpdateItem = "UpdateItem"
       val UpdateItemAndLoad = "UpdateItemAndLoad"

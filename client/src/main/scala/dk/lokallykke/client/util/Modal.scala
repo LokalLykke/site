@@ -169,7 +169,6 @@ object Modal {
   }
 
   def insertSelector(body : JQuery, selOpt : SelectableOptions) = {
-    val selSet = selOpt.selected.toSeq.flatten.toSet
     val optSet = selOpt.options.toSet
     val allOpts = selOpt.options ++ selOpt.selected.toSeq.flatten.filter(s => !optSet(s))
     val input = $("<div class='my-2'>").append(
@@ -178,7 +177,6 @@ object Modal {
     $(body).append(input)
     val select = Selector(selOpt.id, body, allOpts, selOpt.selected.toList.flatten)
     var retVal : Option[Seq[String]] = selOpt.selected
-    import Selector._
     $(select).change((ev : JQueryEventObject) => {
       $(s"#${selOpt.id}").value() match {
         case null => println(s"selectize element (${selOpt.id}) value was null")

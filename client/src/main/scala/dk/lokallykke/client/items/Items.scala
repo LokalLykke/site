@@ -37,10 +37,19 @@ object Items {
   val ItemsFileInputId = "items-files-input"
   val ItemsInstagramTextareaId = "items-instagram-textarea"
   val ItemsUploadAllButtonId = "items-upload-all"
+  val ItemsSearchContainerId = "items-search-container"
+  val ItemsSearchLabelsId = "items-search-labels"
+  val ItemsSearchNameId = "items-search-name"
+  val ItemsSearchSubmitButtonId = "items-search-submit"
 
   var uploadedFiles = Seq.empty[UploadedFile]
   var instagramItems = Seq.empty[InstagramItem]
   var availableTags : Seq[String] = Nil
+
+  object SearchOptions {
+    var labels = Set.empty[String]
+    var name : Option[String] = None
+  }
 
 
   object Tables {
@@ -224,11 +233,13 @@ object Items {
     $(ItemsNavQuery).foreach((el : Element) => {
       $(el).click((obj : JQueryEventObject) => updateItemsNavSelection($(el).attr("id").toString))
     })
+    setSelectedNav(ItemsNavOnStockId)
   }
 
   @JSExport
   def setTagOptions(str : String) : Unit = {
     availableTags = str.split(";")
+    initiateItemSearchForm()
   }
 
   @JSExport
@@ -246,27 +257,63 @@ object Items {
     }
   }
 
+  def initiateItemSearchForm() : Unit = {
+    val tagSelector = Selector(ItemsSearchLabelsId, availableTags, Nil)
+    $(tagSelector).change(() => {
+      val newValue = $(tagSelector).value()
+      if(newValue == null || newValue.toString.trim.isEmpty)
+        SearchOptions.labels = Set.empty[String]
+      else SearchOptions.labels = newValue.toString.split(";").toSet
+    })
+
+    val itemsSearchNameJquery = s"#$ItemsSearchNameId"
+    $(itemsSearchNameJquery).change(() => {
+      val newValue = $(itemsSearchNameJquery)
+      if(newValue == null || newValue.value().toString.trim.isEmpty)
+        SearchOptions.name = None
+      else SearchOptions.name = Some(newValue.value().toString)
+    })
+
+    $(s"#$ItemsSearchSubmitButtonId").click(() => {
+      ItemsConnector.requestItems(SearchOptions.labels, SearchOptions.name)
+    })
+  }
+
+  def setItemSearchVisibility(visible : Boolean) : Unit = {
+    if(visible)
+      $(s"#$ItemsSearchContainerId").show()
+    else
+      $(s"#$ItemsSearchContainerId").hide()
+  }
+
   private def clearContent() = {
     $(s"#$ItemsContentId").empty()
     $(s"#$ItemsContentSubId").empty()
   }
 
-
-  def updateItemsNavSelection(selected : String) : Unit = {
+  def setSelectedNav(selected : String) : Unit = {
     $("[typ='items-nav']").removeAttr("aria-current").removeClass("active")
     $(s"#$selected").attr("aria-current", "page").addClass("active")
+  }
+
+
+  def updateItemsNavSelection(selected : String) : Unit = {
+    setSelectedNav(selected)
     clearContent()
     uploadedFiles = Nil
 
     selected match {
       case ItemsFromInstagramId => {
+        setItemSearchVisibility(false)
         ItemsConnector.send(ToServerMessage(ToServer.LoadInstagramItems))
         prepareForInstagramStatus()
       }
       case ItemsNavUploadId => {
+        setItemSearchVisibility(false)
         insertFileUpload()
       }
       case ItemsNavOnStockId => {
+        setItemSearchVisibility(true)
         ItemsConnector.requestItems()
       }
       case _ => {
@@ -384,8 +431,8 @@ object Items {
     import io.circe.parser._
     import dk.lokallykke.client.Messages.Items._
 
-    def requestItems() : Unit = {
-      val mess = ToServer.ToServerMessage(ToServer.RequestItems)
+    def requestItems(labelFilter : Set[String] = Set.empty[String], nameFilter : Option[String] = None) : Unit = {
+      val mess = ToServer.ToServerMessage(ToServer.RequestItems, labelFilter = labelFilter, nameFilter = nameFilter)
       send(mess)
     }
 
