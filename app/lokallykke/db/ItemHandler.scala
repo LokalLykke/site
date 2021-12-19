@@ -76,7 +76,6 @@ trait ItemHandler {
       filteredByName.filter(res => withAllTags.filter(wt => wt === res.id).exists)
     }
     val returnee = Await.result(db.run(filteredByTags.result), dt)
-    logger.info(s"Returned following IDs: ${returnee.map(_.id).mkString(", ")}")
     returnee
   }
 

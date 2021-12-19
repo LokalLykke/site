@@ -61,7 +61,7 @@ class ItemsController  @Inject()(cc : ControllerComponents, executionContext : E
 
     def sendItems(labelFilter : Set[String], nameFilter : Option[String]) = {
       val items = ItemsController.loadItems(site.itemHandler, false, labelFilter, nameFilter)
-      logger.info(s"Based on labelFilter: ${labelFilter.mkString(", ")} and nameFilter: ${nameFilter}, loaded: ${items.map(_.itemId).mkString(", ")}")
+      logger.debug(s"Based on labelFilter: ${labelFilter.mkString(", ")} and nameFilter: ${nameFilter}, loaded: ${items.map(_.itemId).mkString(", ")}")
       val options = site.itemHandler.loadDistinctTags
       out ! Json.toJson(ToClient.ToClientMessage(Some(items), tagOptions = Some(options)))
     }
